@@ -491,7 +491,7 @@ function showDashboard() {
         : `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${g.id}/header.jpg`;
 
       html += `<div class="dashboard-mini-card" data-action="searchGame" data-id="${g.id}">
-        <img class="dashboard-mini-img" src="${escapeHtml(imgSrc)}" alt="${escapeHtml(g.title)}" onerror="this.src='images/icon-128.png'">
+        <img class="dashboard-mini-img" src="${escapeHtml(imgSrc)}" alt="${escapeHtml(g.title)}">
         <div class="dashboard-mini-info">
           <div class="dashboard-mini-title">${escapeHtml(g.title)}</div>
           <div class="dashboard-mini-prices">
@@ -698,7 +698,7 @@ function renderGameCard(id, game) {
 
   return `<div class="game-card" data-game-id="${id}">
     <div class="game-card-body">
-      <img class="game-card-img" src="${escapeHtml(imgSrc)}" alt="${escapeHtml(game.title || '')}" onerror="this.src='images/icon-128.png'">
+      <img class="game-card-img" src="${escapeHtml(imgSrc)}" alt="${escapeHtml(game.title || '')}">
       <div class="game-card-content">
         <div class="game-title-row">
           <div class="game-title">${escapeHtml(game.title || 'Unknown')}</div>
@@ -834,11 +834,11 @@ function loadActiveBundles() {
       const imgSrc = b.image || storeLogoUrl;
 
       // Also create a tiny badge
-      const storeBadgeHtml = `<div class="active-bundle-store" style="display:flex;align-items:center;gap:4px;"><img src="${storeLogoUrl}" style="width:12px;height:12px;border-radius:2px;" onerror="this.style.display='none'">${escapeHtml(shopName)}</div>`;
+      const storeBadgeHtml = `<div class="active-bundle-store" style="display:flex;align-items:center;gap:4px;"><img src="${storeLogoUrl}" style="width:12px;height:12px;border-radius:2px;">${escapeHtml(shopName)}</div>`;
 
       h += `<div class="active-bundle-card">
         <div class="active-bundle-body">
-          <img class="active-bundle-img" style="background:#fff; padding:4px;" src="${escapeHtml(imgSrc)}" alt="${escapeHtml(shopName)}" onerror="this.src='images/icon-128.png'">
+          <img class="active-bundle-img" style="background:#fff; padding:4px;" src="${escapeHtml(imgSrc)}" alt="${escapeHtml(shopName)}">
           <div class="active-bundle-content">
             <div class="active-bundle-header"><div class="active-bundle-title" style="margin-right:8px">${escapeHtml(bundleTitle)}</div>${storeBadgeHtml}</div>
             <div class="active-bundle-tiers">`;
@@ -899,7 +899,7 @@ function displayWishlist() {
 
     html += `<div class="wishlist-item" data-wl-id="${item.id}">
       <div class="wishlist-header" data-wl-expand="${item.id}">
-        <img class="wishlist-img" src="${escapeHtml(imgSrc)}" alt="${escapeHtml(item.title)}" onerror="this.src='images/icon-128.png'">
+        <img class="wishlist-img" src="${escapeHtml(imgSrc)}" alt="${escapeHtml(item.title)}">
         <div class="wishlist-header-info">
           <div class="wishlist-title">${escapeHtml(item.title)}</div>
           <div class="wishlist-meta"><span>Added ${dateStr}</span>${item.addedPrice != null ? `<span>at <span class="price-at">${item.addedPrice}</span></span>` : ''}</div>
@@ -1294,3 +1294,19 @@ function saveData() {
     } catch { /* sync might be unavailable */ }
   }
 }
+
+// ── Global Image Error Fallback (Manifest V3 CSP-Safe) ──────────────────────
+// Listen for all image load errors (must use capture phase since error events do not bubble)
+document.addEventListener('error', (e) => {
+  if (e.target && e.target.tagName === 'IMG') {
+    // If it's a tiny store logo badge that failed, simply hide it
+    if (e.target.closest('.active-bundle-store') || e.target.classList.contains('active-bundle-store-logo')) {
+      e.target.style.display = 'none';
+      return;
+    }
+    // Prevent infinite loops if default icon itself is somehow missing
+    if (e.target.src && !e.target.src.endsWith('images/icon-128.png')) {
+      e.target.src = 'images/icon-128.png';
+    }
+  }
+}, true);

@@ -332,7 +332,9 @@
     if (isBundle) {
       const bundleSelectors = [
         '.bundle-item-title', '.card-title', '.product-name',
-        'h3 a', 'h4 a',
+        '.game-card-title', '.product-title', '.game-title',
+        '.product-details-title', '[data-test-id="product-link"]',
+        'h3 a', 'h4 a', 'h3'
       ];
       for (const sel of bundleSelectors) {
         const collected = safeCollectTitles(sel, 50);
