@@ -359,12 +359,24 @@ function showDashboard() {
         <div class="dashboard-section-header"><span class="dash-icon">📉</span> Price Drops Since You Added</div>`;
       for (const d of priceDrops.slice(0, 5)) {
         const pct = ((d.diff / d.addedPrice) * 100).toFixed(0);
+        const scoreHtml = userPrefs.dealScores && d.score !== null ? dealScoreBadge(d.score) : '';
+        const p = d.game.prices;
+        const retail = p.currentRetail ? parseFloat(p.currentRetail) : null;
+        const keyshop = p.currentKeyshops ? parseFloat(p.currentKeyshops) : null;
+        let sub = '';
+        if (retail !== null && keyshop !== null) sub = `<div class="dashboard-mini-subprice">🏪 ${retail} · 🔑 ${keyshop} ${d.currency}</div>`;
+
         html += `<div class="dashboard-mini-card" data-action="searchGame" data-id="${d.id}">
+          ${scoreHtml}
           <div class="dashboard-mini-info">
             <div class="dashboard-mini-title">${escapeHtml(d.title)}</div>
             <div class="dashboard-mini-meta">Was ${d.addedPrice} ${d.currency} when added</div>
+            <div class="dashboard-mini-cta">View prices →</div>
           </div>
-          <div class="dashboard-mini-price">${d.currentPrice} ${d.currency}</div>
+          <div class="dashboard-mini-prices">
+            <div class="dashboard-mini-price">${d.currentPrice} ${d.currency}</div>
+            ${sub}
+          </div>
           <span class="discount-badge">-${pct}%</span>
         </div>`;
       }
@@ -376,13 +388,25 @@ function showDashboard() {
       html += `<div class="dashboard-section">
         <div class="dashboard-section-header"><span class="dash-icon">⭐</span> At Historical Low</div>`;
       for (const h of historicalLows.slice(0, 5)) {
+        const scoreHtml = userPrefs.dealScores && h.score !== null ? dealScoreBadge(h.score) : '';
+        const p = h.game.prices;
+        const retail = p.currentRetail ? parseFloat(p.currentRetail) : null;
+        const keyshop = p.currentKeyshops ? parseFloat(p.currentKeyshops) : null;
+        let sub = '';
+        if (retail !== null && keyshop !== null) sub = `<div class="dashboard-mini-subprice">🏪 ${retail} · 🔑 ${keyshop} ${h.currency}</div>`;
+
         html += `<div class="dashboard-mini-card" data-action="searchGame" data-id="${h.id}">
+          ${scoreHtml}
           <div class="dashboard-mini-info">
             <div class="dashboard-mini-title">${escapeHtml(h.title)}</div>
             <div class="dashboard-mini-meta">Historical low: ${h.histLow} ${h.currency}</div>
+            <div class="dashboard-mini-cta">View prices →</div>
           </div>
-          <div class="dashboard-mini-price">${h.currentPrice} ${h.currency}</div>
-          <span class="best-deal-tag">Hist Low</span>
+          <div class="dashboard-mini-prices">
+            <div class="dashboard-mini-price">${h.currentPrice} ${h.currency}</div>
+            ${sub}
+          </div>
+          <span class="best-deal-tag">⭐ Hist Low</span>
         </div>`;
       }
       html += '</div>';
@@ -407,16 +431,34 @@ function showDashboard() {
 
       const scoreHtml = userPrefs.dealScores && g.score !== null ? dealScoreBadge(g.score) : '';
 
+      // Get official + keyshop prices for breakdown
+      const p = g.game.prices;
+      const retail = p.currentRetail ? parseFloat(p.currentRetail) : null;
+      const keyshop = p.currentKeyshops ? parseFloat(p.currentKeyshops) : null;
+
+      let subpriceHtml = '';
+      if (retail !== null && keyshop !== null) {
+        subpriceHtml = `<div class="dashboard-mini-subprice">🏪 ${retail} · 🔑 ${keyshop} ${g.currency}</div>`;
+      } else if (retail !== null) {
+        subpriceHtml = `<div class="dashboard-mini-subprice">🏪 Official: ${retail} ${g.currency}</div>`;
+      } else if (keyshop !== null) {
+        subpriceHtml = `<div class="dashboard-mini-subprice">🔑 Keyshop: ${keyshop} ${g.currency}</div>`;
+      }
+
       html += `<div class="dashboard-mini-card" data-action="searchGame" data-id="${g.id}">
         ${scoreHtml}
         <div class="dashboard-mini-info">
           <div class="dashboard-mini-title">${escapeHtml(g.title)}</div>
-          <div class="dashboard-mini-meta" style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+          <div class="dashboard-mini-meta">
             ${g.addedPrice != null ? `Added at ${g.addedPrice} ${g.currency}` : ''}
             ${statusTag}
           </div>
+          <div class="dashboard-mini-cta">View prices →</div>
         </div>
-        <div class="dashboard-mini-price">${g.currentPrice} ${g.currency}</div>
+        <div class="dashboard-mini-prices">
+          <div class="dashboard-mini-price">${g.currentPrice} ${g.currency}</div>
+          ${subpriceHtml}
+        </div>
       </div>`;
     }
     html += '</div>';

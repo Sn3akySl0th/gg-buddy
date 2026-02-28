@@ -682,40 +682,47 @@
 
     /* ── Dashboard sections ─────────────────────────────────── */
     .dashboard-section {
-      margin-bottom: 16px;
+      margin-bottom: 18px;
     }
 
     .dashboard-section-header {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       font-size: 0.78rem;
-      font-weight: 700;
+      font-weight: 900;
       color: var(--gg-text-sec);
       text-transform: uppercase;
-      letter-spacing: 0.04em;
-      margin-bottom: 8px;
+      letter-spacing: 0.05em;
+      margin-bottom: 10px;
+      padding: 6px 10px;
+      background: var(--gg-accent-bg);
+      border-radius: var(--gg-radius);
+      border-left: 3px solid var(--gg-accent);
     }
 
     .dashboard-section-header .dash-icon {
-      font-size: 1rem;
+      font-size: 1.05rem;
     }
 
     .dashboard-mini-card {
       background: var(--gg-card);
       border: 1px solid var(--gg-border);
       border-radius: var(--gg-radius);
-      padding: 10px 12px;
-      margin-bottom: 6px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       cursor: pointer;
-      transition: background 0.15s;
+      transition: all 0.2s;
+      box-shadow: var(--gg-shadow);
     }
 
     .dashboard-mini-card:hover {
       background: var(--gg-hover);
+      transform: translateY(-1px);
+      box-shadow: rgba(0, 0, 0, 0.12) 0px 6px 16px;
     }
 
     .dashboard-mini-info {
@@ -725,22 +732,47 @@
 
     .dashboard-mini-title {
       font-weight: 700;
-      font-size: 0.82rem;
+      font-size: 0.88rem;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      margin-bottom: 3px;
     }
 
     .dashboard-mini-meta {
       font-size: 0.7rem;
       color: var(--gg-text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .dashboard-mini-prices {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
     }
 
     .dashboard-mini-price {
       font-weight: 900;
-      font-size: 0.88rem;
+      font-size: 1rem;
       color: var(--gg-green);
       white-space: nowrap;
+    }
+
+    .dashboard-mini-subprice {
+      font-size: 0.65rem;
+      color: var(--gg-text-muted);
+      white-space: nowrap;
+    }
+
+    .dashboard-mini-cta {
+      font-size: 0.6rem;
+      color: var(--gg-accent);
+      font-weight: 700;
+      margin-top: 2px;
     }
 
     /* ── Loading / states ──────────────────────────────────── */
