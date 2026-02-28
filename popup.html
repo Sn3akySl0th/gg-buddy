@@ -434,6 +434,27 @@
       position: relative;
     }
 
+    .game-card-body {
+      display: flex;
+      gap: 14px;
+    }
+
+    .game-card-img {
+      width: 100px;
+      height: 100px;
+      border-radius: 6px;
+      object-fit: cover;
+      background: var(--gg-bg);
+      flex-shrink: 0;
+    }
+
+    .game-card-content {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
     .game-card:hover {
       box-shadow: rgba(12, 12, 13, 0.12) 0px 6px 16px;
     }
@@ -672,6 +693,25 @@
       padding: 12px;
       margin-bottom: 8px;
       box-shadow: var(--gg-shadow);
+    }
+
+    .active-bundle-body {
+      display: flex;
+      gap: 12px;
+    }
+
+    .active-bundle-img {
+      width: 80px;
+      height: 80px;
+      border-radius: 6px;
+      object-fit: cover;
+      background: var(--gg-bg);
+      flex-shrink: 0;
+    }
+
+    .active-bundle-content {
+      flex: 1;
+      min-width: 0;
     }
 
     .active-bundle-header {
@@ -1013,8 +1053,17 @@
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       transition: background 0.15s;
+    }
+
+    .wishlist-img {
+      width: 48px;
+      height: 48px;
+      border-radius: 4px;
+      object-fit: cover;
+      background: var(--gg-bg);
+      flex-shrink: 0;
     }
 
     .wishlist-header:hover {

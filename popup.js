@@ -686,16 +686,25 @@ function renderGameCard(id, game) {
   const chartHtml = history.length > 1 ? generateChart(history, currency) : '';
   const inWishlist = wishlist.some((w) => w.id === id);
 
+  const imgSrc = (game.info && game.info.image)
+    ? game.info.image
+    : 'images/icon-128.png'; // Fallback
+
   return `<div class="game-card" data-game-id="${id}">
-    <div class="game-title-row">
-      <div class="game-title">${escapeHtml(game.title || 'Unknown')}</div>
-      ${dealScoreBadge(score)}
+    <div class="game-card-body">
+      <img class="game-card-img" src="${escapeHtml(imgSrc)}" alt="${escapeHtml(game.title || '')}">
+      <div class="game-card-content">
+        <div class="game-title-row">
+          <div class="game-title">${escapeHtml(game.title || 'Unknown')}</div>
+          ${dealScoreBadge(score)}
+        </div>
+        <div class="price-section">
+          ${priceCol('Official Stores', p.currentRetail, retailDiscount, !bestDealIsKey && retailDiscount)}
+          ${priceCol('Keyshops', p.currentKeyshops, keyDiscount, bestDealIsKey)}
+        </div>
+        ${histHtml}${histLowTag}${chartHtml}
+      </div>
     </div>
-    <div class="price-section">
-      ${priceCol('Official Stores', p.currentRetail, retailDiscount, !bestDealIsKey && retailDiscount)}
-      ${priceCol('Keyshops', p.currentKeyshops, keyDiscount, bestDealIsKey)}
-    </div>
-    ${histHtml}${histLowTag}${chartHtml}
     <div class="game-actions">
       <button class="btn-sm ${inWishlist ? 'btn-danger remove-wl-btn' : 'btn-green add-wl-btn'}" data-id="${id}" data-title="${escapeAttr(game.title || '')}" data-price="${getBestPrice(p) || ''}">
         ${inWishlist ? '♥ Wishlisted' : '♡ Wishlist'}
@@ -791,11 +800,23 @@ function loadActiveBundles() {
         const days = Math.ceil((new Date(b.dateTo + ' UTC') - new Date()) / 86400000);
         if (days > 0) expiryHtml = `<div class="bundle-expiry">⏰ ${days} day${days !== 1 ? 's' : ''} left</div>`;
       }
-      h += `<div class="active-bundle-card"><div class="active-bundle-header"><div class="active-bundle-title">${escapeHtml(b.title)}</div>${b.shop ? `<div class="active-bundle-store">${escapeHtml(b.shop)}</div>` : ''}</div><div class="active-bundle-tiers">`;
+
+      const imgSrc = (b.image) ? b.image : 'images/icon-128.png';
+
+      h += `<div class="active-bundle-card">
+        <div class="active-bundle-body">
+          <img class="active-bundle-img" src="${escapeHtml(imgSrc)}" alt="${escapeHtml(b.title)}">
+          <div class="active-bundle-content">
+            <div class="active-bundle-header"><div class="active-bundle-title">${escapeHtml(b.title)}</div>${b.shop ? `<div class="active-bundle-store">${escapeHtml(b.shop)}</div>` : ''}</div>
+            <div class="active-bundle-tiers">`;
+
       if (b.tiers) for (const t of b.tiers) h += `<div class="bundle-tier"><span class="bundle-price">${t.price} ${t.currency}</span> · ${t.gamesCount || '?'} game${(t.gamesCount || 0) > 1 ? 's' : ''}</div>`;
+
       h += `</div>${expiryHtml}`;
       if (b.url) h += `<a class="game-link" href="${b.url}" target="_blank" rel="noopener" style="display:block;margin-top:6px">View bundle →</a>`;
-      h += '</div>';
+      h += `</div>
+        </div>
+      </div>`;
     }
     container.innerHTML = h;
     bundlesLoaded = true;
@@ -839,8 +860,16 @@ function displayWishlist() {
   for (const item of wishlist) {
     const dateStr = new Date(item.addedDate).toLocaleDateString();
     const lastKnown = item.lastPrice != null ? `${item.lastPrice} ${item.lastCurrency || 'USD'}` : null;
+
+    // Attempt to resolve image if game was cached previously
+    const cachedGame = priceCache[regionSelect.value + ':' + item.id]?.data;
+    const imgSrc = (cachedGame && cachedGame.info && cachedGame.info.image)
+      ? cachedGame.info.image
+      : 'images/icon-48.png'; // Fallback
+
     html += `<div class="wishlist-item" data-wl-id="${item.id}">
       <div class="wishlist-header" data-wl-expand="${item.id}">
+        <img class="wishlist-img" src="${escapeHtml(imgSrc)}" alt="${escapeHtml(item.title)}">
         <div class="wishlist-header-info">
           <div class="wishlist-title">${escapeHtml(item.title)}</div>
           <div class="wishlist-meta"><span>Added ${dateStr}</span>${item.addedPrice != null ? `<span>at <span class="price-at">${item.addedPrice}</span></span>` : ''}</div>
