@@ -424,17 +424,17 @@
 
     /* ── Deal Score badge ──────────────────────────────────── */
     .deal-score {
-      width: 38px;
-      height: 38px;
+      width: 42px;
+      height: 42px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 900;
-      font-size: 0.72rem;
+      font-size: 1rem;
       flex-shrink: 0;
       position: relative;
-      border: 3px solid;
+      border: 4px solid;
       background: var(--gg-card);
     }
 
@@ -458,14 +458,16 @@
       color: #7c3aed;
     }
 
+    /* Used in larger layouts (like search results or main card) */
     .deal-score-label {
       font-size: 0.55rem;
       text-transform: uppercase;
       letter-spacing: 0.04em;
       position: absolute;
-      bottom: -12px;
+      bottom: -14px;
       white-space: nowrap;
       font-weight: 700;
+      color: var(--gg-text-sec);
     }
 
     /* ── Price display ─────────────────────────────────────── */
@@ -709,7 +711,7 @@
       background: var(--gg-card);
       border: 1px solid var(--gg-border);
       border-radius: var(--gg-radius);
-      padding: 12px 14px;
+      padding: 10px;
       margin-bottom: 8px;
       display: flex;
       align-items: center;
@@ -725,54 +727,98 @@
       box-shadow: rgba(0, 0, 0, 0.12) 0px 6px 16px;
     }
 
+    .dashboard-mini-img {
+      width: 72px;
+      height: 72px;
+      border-radius: 6px;
+      object-fit: cover;
+      background: var(--gg-bg);
+      flex-shrink: 0;
+    }
+
     .dashboard-mini-info {
       flex: 1;
       min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
     }
 
     .dashboard-mini-title {
-      font-weight: 700;
-      font-size: 0.88rem;
+      font-weight: 900;
+      font-size: 0.95rem;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      margin-bottom: 3px;
-    }
-
-    .dashboard-mini-meta {
-      font-size: 0.7rem;
-      color: var(--gg-text-muted);
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      flex-wrap: wrap;
+      color: var(--gg-text);
     }
 
     .dashboard-mini-prices {
       display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 2px;
+      align-items: center;
+      gap: 6px;
     }
 
     .dashboard-mini-price {
       font-weight: 900;
-      font-size: 1rem;
+      font-size: 1.05rem;
       color: var(--gg-green);
-      white-space: nowrap;
+      line-height: 1;
     }
 
-    .dashboard-mini-subprice {
+    .dashboard-mini-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    /* Solid Pill Badges */
+    .pill-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 12px;
       font-size: 0.65rem;
-      color: var(--gg-text-muted);
-      white-space: nowrap;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.2;
     }
 
-    .dashboard-mini-cta {
+    .pill-discount {
+      background: var(--gg-green);
+    }
+
+    .pill-low {
+      background: var(--gg-gold);
+    }
+
+    .pill-same {
+      background: var(--gg-text-muted);
+    }
+
+    .pill-higher {
+      background: var(--gg-red);
+    }
+
+    /* Deal Score Column */
+    .dashboard-mini-score-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+      padding-left: 8px;
+      border-left: 1px solid var(--gg-border);
+    }
+
+    .dashboard-mini-score-label {
       font-size: 0.6rem;
-      color: var(--gg-accent);
+      color: var(--gg-text-sec);
+      text-transform: uppercase;
       font-weight: 700;
-      margin-top: 2px;
+      letter-spacing: 0.05em;
     }
 
     /* ── Loading / states ──────────────────────────────────── */
