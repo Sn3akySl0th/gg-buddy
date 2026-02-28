@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Game Deal Finder",
+  "name": "GG Buddy",
   "version": "2.1.0",
   "description": "Automatically scan game store pages and find the best deals via GG.deals — works on Steam, Epic, GOG, keyshops, and any gaming site",
   "permissions": [
@@ -43,7 +43,7 @@
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Game Deal Finder"
+    "default_title": "GG Buddy"
   },
   "background": {
     "service_worker": "background.js"

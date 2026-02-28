@@ -1,4 +1,4 @@
-# Game Deal Finder 🎮💰
+# GG Buddy 🎮💰
 
 A Chrome extension that automatically compares PC game prices across 17+ stores using [GG.deals](https://gg.deals). Never overpay for a game again.
 
