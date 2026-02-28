@@ -1,0 +1,56 @@
+{
+  "manifest_version": 3,
+  "name": "Game Deal Finder",
+  "version": "2.1.0",
+  "description": "Automatically scan game store pages and find the best deals via GG.deals — works on Steam, Epic, GOG, keyshops, and any gaming site",
+  "permissions": [
+    "contextMenus",
+    "storage",
+    "notifications",
+    "alarms",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://api.gg.deals/*",
+    "https://store.steampowered.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://store.steampowered.com/*",
+        "https://gg.deals/*",
+        "https://store.epicgames.com/*",
+        "https://www.gog.com/*",
+        "https://www.humblebundle.com/*",
+        "https://www.fanatical.com/*",
+        "https://www.greenmangaming.com/*",
+        "https://www.cdkeys.com/*",
+        "https://www.kinguin.net/*",
+        "https://www.eneba.com/*",
+        "https://www.g2a.com/*",
+        "https://www.allkeyshop.com/*",
+        "https://www.instant-gaming.com/*",
+        "https://isthereanydeal.com/*",
+        "https://www.gamersgate.com/*",
+        "https://www.wingamestore.com/*",
+        "https://www.dlgamer.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Game Deal Finder"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "images/icon-16.png",
+    "48": "images/icon-48.png",
+    "128": "images/icon-128.png"
+  }
+}
