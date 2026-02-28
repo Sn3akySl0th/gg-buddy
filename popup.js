@@ -820,8 +820,10 @@ function loadActiveBundles() {
       }
 
       // Map common store keywords to their actual domains for accurate favicon fetching
-      let domain = shopName.toLowerCase().replace(/[^a-z0-9]/g, '') + '.com';
-      const s = shopName.toLowerCase();
+      let domain = null;
+      // GG.deals URLs often contain the retailer name even if the shopName acts as a publisher/tier name
+      const s = shopName.toLowerCase() + ' ' + (b.url || '').toLowerCase();
+
       if (s.includes('humble')) domain = 'humblebundle.com';
       else if (s.includes('fanatical')) domain = 'fanatical.com';
       else if (s.includes('indiegala')) domain = 'indiegala.com';
@@ -829,15 +831,20 @@ function loadActiveBundles() {
       else if (s.includes('epic')) domain = 'epicgames.com';
       else if (s.includes('gog')) domain = 'gog.com';
       else if (s.includes('digiphile')) domain = 'digiphile.co';
+      else if (s.includes('cdkeys')) domain = 'cdkeys.com';
+      else if (s.includes('greenman') || s.includes('gmg')) domain = 'greenmangaming.com';
 
-      // Use Google's S2 Favicon service which handles large 128px high-res favicons and doesn't 404 like icon.horse
-      const storeLogoUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+      // Use Google's S2 Favicon service if domain is mapped, otherwise fallback to our clean branded icon
+      // This prevents Google S2 from returning low-res blurry globes for unrecognized string guesses
+      const storeLogoUrl = domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=128` : 'images/icon-128.png';
 
       // Use the crisp store logo as the main image
       const imgSrc = b.image || storeLogoUrl;
 
-      // Also create a tiny badge
-      const storeBadgeHtml = `<div class="active-bundle-store" style="display:flex;align-items:center;gap:4px;"><img src="${storeLogoUrl}" style="width:12px;height:12px;border-radius:2px;">${escapeHtml(shopName)}</div>`;
+      // Also create a tiny badge (only show the icon badge if we have a valid domain)
+      const storeBadgeHtml = domain
+        ? `<div class="active-bundle-store" style="display:flex;align-items:center;gap:4px;"><img src="${storeLogoUrl}" style="width:12px;height:12px;border-radius:2px;">${escapeHtml(shopName)}</div>`
+        : `<div class="active-bundle-store">${escapeHtml(shopName)}</div>`;
 
       h += `<div class="active-bundle-card">
         <div class="active-bundle-body">
