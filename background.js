@@ -137,9 +137,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'gamesDetected') {
     if (message.fromPopup) {
       chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
-        const tabId = tabs?.[0]?.id;
-        if (tabId) await handleDetectedGames(message.data, tabId);
-        sendResponse({ ok: true });
+        try {
+          const tabId = tabs?.[0]?.id;
+          if (tabId) await handleDetectedGames(message.data, tabId);
+        } catch (e) {
+          console.warn('gamesDetected(fromPopup) failed:', e);
+        } finally {
+          sendResponse({ ok: true });
+        }
       });
       return true;
     }
@@ -220,6 +225,8 @@ async function handleDetectedGames(data, tabId) {
   const count = appIds.length;
   chrome.action.setBadgeText({ text: count > 0 ? String(count) : '', tabId });
   chrome.action.setBadgeBackgroundColor({ color: '#048044', tabId });
+  
+
 }
 
 function handleGetDetected(tabId, sendResponse) {
@@ -470,7 +477,16 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 
 async function checkWishlistPrices() {
   try {
-    const result = await chrome.storage.local.get(['wishlist', 'notificationSettings', 'lastRegion']);
+    const result = await chrome.storage.local.get(['wishlist', 'notificationSettings', 'lastRegion', 'userPrefs']);
+    let userPrefs = { ...(result.userPrefs || {}) };
+    try {
+      const sync = await chrome.storage.sync.get(['userPrefs']);
+      if (sync.userPrefs && typeof sync.userPrefs === 'object') {
+        userPrefs = { ...userPrefs, ...sync.userPrefs };
+      }
+    } catch { /* ignore */ }
+    const officialOnly = userPrefs.officialOnly === true;
+
     const wishlist = result.wishlist || [];
     const settings = result.notificationSettings || { enabled: false };
     const region = result.lastRegion || 'us';
@@ -487,11 +503,13 @@ async function checkWishlistPrices() {
       const game = prices[item.id];
       if (!game || !game.prices) continue;
 
-      const price = game.prices.currentRetail
-        ? parseFloat(game.prices.currentRetail)
-        : game.prices.currentKeyshops
-          ? parseFloat(game.prices.currentKeyshops)
-          : null;
+      const price = officialOnly
+        ? (game.prices.currentRetail ? parseFloat(game.prices.currentRetail) : null)
+        : game.prices.currentRetail
+          ? parseFloat(game.prices.currentRetail)
+          : game.prices.currentKeyshops
+            ? parseFloat(game.prices.currentKeyshops)
+            : null;
 
       if (price !== null && !isNaN(price) && price < item.alertThreshold) {
         chrome.notifications.create(`price-drop-${item.id}-${Date.now()}`, {

@@ -1,0 +1,37 @@
+🎮 GG Buddy — The smartest way to find PC game deals
+
+Never overpay for a game again. GG Buddy automatically detects games on store pages and seamlessly pulls in the best available prices across all stores via GG.deals.
+
+✅ FEATURES
+
+🔍 Auto-Detection & Support the Devs Nudge — Works on 17+ gaming & proxy sites. Automatically detects the game you’re browsing and pulls in the best available prices — no searching required. Browsing unofficial sites? GG Buddy dynamically transforms the price bar into a bold "Support the Devs!" nudge, proving that high-quality, legitimate deals are cheaper than you think!
+
+📉 Historical Price Trends — A built-in visual sparkline chart renders dynamically on game cards and your dashboard, letting you compare the live price against historical lows in an instant.
+
+💜 Steam & Epic Wishlist Support — Import games directly from your Steam and Epic Games Store wishlists into GG Buddy. Detect wishlisted games on store pages and add them to your deal tracker in one click.
+
+🛒 "Official Stores Only" Filter — Prefer to avoid grey-market keyshops? One toggle filters out third-party keyshops everywhere that matters: the extension popup (dashboard, search, wishlist views, deal scores), the inline price bar on store pages, and background wishlist price-drop notifications. All comparisons use official retailer pricing only while the option is enabled.
+
+💰 Inline Price Overlay — An elegant floating bar at the bottom of store pages shows the best price. With Official Stores Only on, keyshop prices are hidden from the bar and only official store pricing is used for the “best” line.
+
+🏆 Deal Score (0–100) — Each game gets an intelligent score automatically calculated based on discount depth, historical minimums, and price trends. See at a glance if a game is just a "Good" deal or an "Amazing" one!
+
+📊 Smart Dashboard — Your personal deal hub highlights immediate price drops on your wishlisted games and automatically prioritizes tracking titles currently sitting at historical lows.
+
+🔔 Shareable Wishlist & Alerts — Track games, set price thresholds, and get notified natively when prices drop. Want to share your list? One click instantly formats and copies your entire wishlist to your clipboard for easy sharing.
+
+📦 Dynamic Bundle Savings — Discover active bundles containing games you're looking at, complete with an automatic calculation of your exact percentage savings compared to individual purchases.
+
+🎨 Full Customization — • 4 beautifully responsive themes: Light, Dark, OLED Black, and System Auto • 7 distinct accent colors • Compact mode for dense lists • Export/Import your wishlist as a JSON backup
+
+☁️ Cross-Device Sync — Your wishlist and user settings sync flawlessly across all of your active Chrome installs.
+
+🌐 18 Languages + Supported Currencies — Full UI localization: Czech, Danish, German, English, Spanish, Finnish, French, Italian, Japanese, Korean, Norwegian, Polish, Portuguese (Brazil), Russian, Swedish, Ukrainian, Chinese Simplified.
+
+🔒 PRIVACY
+• No personal data collected
+• All data stored locally in your browser
+• No tracking, no analytics
+• Open source
+
+Powered by the robust GG.deals API.

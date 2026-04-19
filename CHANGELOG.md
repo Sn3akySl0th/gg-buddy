@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.5.0]
+
+### Added
+
+- **Historical Price Charts** — Added SVG sparkline charts directly into the popup dashboard to verify if a deal is an actual historical low.
+- **Bundle Savings Calculator** — Now actively calculates and highlights how much you're saving in a bundle vs individual game prices on keyshops or retail.
+- **Official Stores Only** — A highly requested setting! Enable this in preferences to completely ignore grey-market keyshops in price calculations, alerts, and dashboard info.
+- **Export Wishlist** — Easily copy your entire wishlist and known prices to your clipboard for sharing with friends.
+- **Legitimacy Nudge** — For users tracking game prices, GG Buddy now introduces a "Buy Legit" banner when visiting popular piracy sites if the game is found to be exceptionally cheap on official or trusted stores to encourage supporting developers.
+
+### Technical
+
+- **Code Modularization** — Refactored massive frontend script monolithic blocks into modular configurations (e.g., extracted all hardcoded DOM selectors).
+
+---
+
 ## [2.3.0] - 2025-03-09
 
 ### Added

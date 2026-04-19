@@ -1,6 +1,17 @@
 (function () {
   'use strict';
 
+  
+  const DOM_SELECTORS = {
+    epicProduct: ['[data-testid="offer-title-info-title"]', 'h1[class*="NavigationVertical"]', 'div[class*="ProductName"]', 'span[data-component="Message"]'],
+    epicWishlist: ['[data-testid="wishlist-item"] [data-testid="offer-title-info-title"]', '[data-testid="wishlist-item"] h6', '[data-testid="wishlist-item"] span[data-component="Message"]', '.wishlist-item .product-name', '[class*="WishlistItem"] [class*="Title"]', '[class*="WishlistItem"] h6', '[class*="wishlist"] [class*="GameTitle"]'],
+    epicCard: ['a[href*="/p/"] span', 'a[href*="/p/"] h6', '[data-testid="offer-title-info-title"]'],
+    gogProduct: ['.productcard-basics__title', '[class*="productTitle"]', 'h1.productcard-basics__title'],
+    humbleBundleItem: ['.item-title', '.content-choice-title', '.entity-title', '.tier-item-view .item-title', 'td.game-name h4', '.dd-image-box-caption', '.human_name-view'],
+    humbleHeader: ['.product-header-view .human_name-view', '.hero-content .heading-text h1', '.bundle-logo-text'],
+    fanaticalBundle: ['.bundle-item-title', '.card-title', '.product-name', '.game-card-title', '.product-title', '.game-title', '.product-details-title', '[data-test-id="product-link"]', 'h3 a', 'h4 a', 'h3']
+  };
+
   const STORE_DETECTORS = {
     // Official stores
     'store.steampowered.com': detectSteamGames,
@@ -25,7 +36,8 @@
     // Sites where we show legitimate deals to encourage buying (discourage piracy)
     'fitgirl-repacks.site': detectGamePageSteamThenTitle,
     'igg-games.com': detectGamePageSteamThenTitle,
-    'gog-games.com': detectGamePageSteamThenTitle,
+    'gog-games': detectGamePageSteamThenTitle,
+    'gog-games.to': detectGamePageSteamThenTitle,
   };
 
   // ── Steam ──────────────────────────────────────────────────────────────────
@@ -356,12 +368,7 @@
     }
 
     // Strategy 3: Epic DOM selectors
-    const epicSelectors = [
-      '[data-testid="offer-title-info-title"]',
-      'h1[class*="NavigationVertical"]',
-      'div[class*="ProductName"]',
-      'span[data-component="Message"]',
-    ];
+    const epicSelectors = DOM_SELECTORS.epicProduct;
     for (const sel of epicSelectors) {
       const t = safeTextContent(sel);
       if (t && t.length > 1 && t.length < 200 && !titles.includes(t)) {
@@ -401,15 +408,7 @@
     const titles = [];
 
     // Epic wishlist uses card-based layout — try multiple selectors
-    const wishlistSelectors = [
-      '[data-testid="wishlist-item"] [data-testid="offer-title-info-title"]',
-      '[data-testid="wishlist-item"] h6',
-      '[data-testid="wishlist-item"] span[data-component="Message"]',
-      '.wishlist-item .product-name',
-      '[class*="WishlistItem"] [class*="Title"]',
-      '[class*="WishlistItem"] h6',
-      '[class*="wishlist"] [class*="GameTitle"]',
-    ];
+    const wishlistSelectors = DOM_SELECTORS.epicWishlist;
 
     for (const sel of wishlistSelectors) {
       const collected = safeCollectTitles(sel, 200);
@@ -421,10 +420,7 @@
 
     // Fallback: grab all game card titles on the page
     if (titles.length === 0) {
-      const cardSelectors = [
-        'a[href*="/p/"] span', 'a[href*="/p/"] h6',
-        '[data-testid="offer-title-info-title"]',
-      ];
+      const cardSelectors = DOM_SELECTORS.epicCard;
       for (const sel of cardSelectors) {
         const collected = safeCollectTitles(sel, 200);
         if (collected.length > 0) {
@@ -491,11 +487,7 @@
       if (titleFromSlug) titles.push(titleFromSlug);
     }
 
-    const gogSelectors = [
-      '.productcard-basics__title',
-      '[class*="productTitle"]',
-      'h1.productcard-basics__title',
-    ];
+    const gogSelectors = DOM_SELECTORS.gogProduct;
     for (const sel of gogSelectors) {
       const t = safeTextContent(sel);
       if (t && t.length > 1 && t.length < 200 && !titles.includes(t)) {
@@ -542,15 +534,7 @@
 
     // Step 2: Item titles
     const titles = [];
-    const bundleItemSelectors = [
-      '.item-title',
-      '.content-choice-title',
-      '.entity-title',
-      '.tier-item-view .item-title',
-      'td.game-name h4',
-      '.dd-image-box-caption',
-      '.human_name-view',
-    ];
+    const bundleItemSelectors = DOM_SELECTORS.humbleBundleItem;
     for (const sel of bundleItemSelectors) {
       const collected = safeCollectTitles(sel, 50);
       if (collected.length > 0) {
@@ -567,11 +551,7 @@
         if (titleFromSlug) titles.push(titleFromSlug);
       }
 
-      const headerSelectors = [
-        '.product-header-view .human_name-view',
-        '.hero-content .heading-text h1',
-        '.bundle-logo-text',
-      ];
+      const headerSelectors = DOM_SELECTORS.humbleHeader;
       for (const sel of headerSelectors) {
         const t = safeTextContent(sel);
         if (t && t.length > 1 && t.length < 200 && !titles.includes(t)) {
@@ -625,12 +605,7 @@
     const titles = [];
     const isBundle = path.includes('/bundle/');
     if (isBundle) {
-      const bundleSelectors = [
-        '.bundle-item-title', '.card-title', '.product-name',
-        '.game-card-title', '.product-title', '.game-title',
-        '.product-details-title', '[data-test-id="product-link"]',
-        'h3 a', 'h4 a', 'h3'
-      ];
+      const bundleSelectors = DOM_SELECTORS.fanaticalBundle;
       for (const sel of bundleSelectors) {
         const collected = safeCollectTitles(sel, 50);
         if (collected.length > 0) {
@@ -1038,7 +1013,7 @@
           const isRepackSite = result.store && (
             result.store.includes('fitgirl-repacks') ||
             result.store.includes('igg-games.com') ||
-            result.store.includes('gog-games.com')
+            result.store.includes('gog-games')
           );
           if (isRepackSite || result.titles.length <= 2) {
             injectPriceOverlay({ title: result.titles[0], store: result.store });
@@ -1101,7 +1076,7 @@
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'scanPage') {
       const host = window.location.hostname;
-      const isRepackSite = host.includes('fitgirl-repacks') || host.includes('igg-games.com') || host.includes('gog-games.com');
+      const isRepackSite = host.includes('fitgirl-repacks') || host.includes('igg-games.com') || host.includes('gog-games');
 
       function doScan() {
         const detector = getDetector();
@@ -1135,6 +1110,28 @@
       });
       return false;
     }
+    if (message.action === 'getPrimaryImage') {
+      const selectors = [
+        '.game-cover img',
+        '.game-media img',
+        '.game-info img',
+        'img[src*="images/games"]',
+        'meta[property="og:image"]',
+      ];
+
+      for (const sel of selectors) {
+        const el = document.querySelector(sel);
+        if (!el) continue;
+        const src = el.tagName === 'META' ? el.getAttribute('content') : (el.currentSrc || el.src);
+        if (src && /^https?:\/\//i.test(src)) {
+          sendResponse({ image: src });
+          return false;
+        }
+      }
+
+      sendResponse({ image: null });
+      return false;
+    }
   });
 
   // ── Inline Price Overlay ───────────────────────────────────────────────────
@@ -1146,16 +1143,30 @@
     if (overlayEl) { overlayEl.remove(); overlayEl = null; }
   }
 
+  /** Match popup: merge sync userPrefs over local. */
+  async function getMergedUserPrefs() {
+    const local = await new Promise((resolve) => chrome.storage.local.get(['userPrefs', 'lastRegion'], resolve));
+    const prefs = { ...(local.userPrefs || {}) };
+    try {
+      const sync = await new Promise((resolve) => chrome.storage.sync.get(['userPrefs'], resolve));
+      if (sync && sync.userPrefs && typeof sync.userPrefs === 'object') {
+        Object.assign(prefs, sync.userPrefs);
+      }
+    } catch { /* ignore */ }
+    return { prefs, lastRegion: local.lastRegion };
+  }
+
   async function injectPriceOverlay(opts) {
     if (overlayDismissed) return;
 
+    let officialOnly = false;
     // Check if user has overlay enabled
     try {
-      const result = await new Promise((resolve) => chrome.storage.local.get(['userPrefs', 'lastRegion'], resolve));
-      const prefs = result.userPrefs || {};
+      const { prefs, lastRegion } = await getMergedUserPrefs();
+      officialOnly = prefs.officialOnly === true;
       if (prefs.overlay === false) return;
-      if (!prefs.region && result.lastRegion) {
-        prefs.region = result.lastRegion;
+      if (!prefs.region && lastRegion) {
+        prefs.region = lastRegion;
       }
       if (!prefs.region) {
         prefs.region = 'us';
@@ -1175,7 +1186,7 @@
           const firstEntry = Object.entries(searchResp.data).find(([, v]) => v && v.prices);
           if (firstEntry) {
             appId = firstEntry[0];
-            renderOverlay(firstEntry[0], firstEntry[1], opts.store);
+            renderOverlay(firstEntry[0], firstEntry[1], opts.store, officialOnly);
             return;
           }
         }
@@ -1188,24 +1199,24 @@
     // Fetch price by ID
     chrome.runtime.sendMessage({ action: 'lookupByIds', ids: [appId], region: opts.region || 'us' }, (resp) => {
       if (!resp || !resp.success || !resp.data[appId]) return;
-      renderOverlay(appId, resp.data[appId], opts.store);
+      renderOverlay(appId, resp.data[appId], opts.store, officialOnly);
     });
   }
 
-  function renderOverlay(appId, game, detectedStore) {
+  function renderOverlay(appId, game, detectedStore, officialOnly = false) {
     const p = game.prices;
     if (!p) return;
 
     const retail = p.currentRetail ? parseFloat(p.currentRetail) : null;
-    const keyshop = p.currentKeyshops ? parseFloat(p.currentKeyshops) : null;
+    let keyshop = p.currentKeyshops ? parseFloat(p.currentKeyshops) : null;
+    if (officialOnly) keyshop = null;
     const currency = p.currency || 'USD';
     const best = (retail !== null && keyshop !== null) ? Math.min(retail, keyshop) : (retail ?? keyshop);
     if (best === null) return;
 
-    const histLow = Math.min(
-      p.historicalRetail ? parseFloat(p.historicalRetail) : Infinity,
-      p.historicalKeyshops ? parseFloat(p.historicalKeyshops) : Infinity
-    );
+    const histRetail = p.historicalRetail ? parseFloat(p.historicalRetail) : Infinity;
+    const histKey = officialOnly ? Infinity : (p.historicalKeyshops ? parseFloat(p.historicalKeyshops) : Infinity);
+    const histLow = Math.min(histRetail, histKey);
     const isHistLow = histLow !== Infinity && best <= histLow * 1.05;
 
     removeOverlay();
@@ -1214,13 +1225,16 @@
 
     const retailStr = retail !== null ? `${retail} ${currency}` : '—';
     const keyStr = keyshop !== null ? `${keyshop} ${currency}` : '—';
+    const keyshopBlock = officialOnly
+      ? ''
+      : `<span style="color:rgba(255,255,255,0.5)">|</span><span>🔑 <b>${keyStr}</b></span>`;
     const bestStr = `${best} ${currency}`;
     const histTag = isHistLow ? `<span style="background:#048044;color:#fff;padding:1px 6px;border-radius:3px;font-size:11px;font-weight:700;margin-left:8px">⭐ ${escapeOverlay(chrome.i18n.getMessage('overlayHistoricalLow') || 'Historical Low')}</span>` : '';
 
     const isUnofficialPage = detectedStore && (
       detectedStore.includes('fitgirl-repacks') ||
       detectedStore.includes('igg-games.com') ||
-      detectedStore.includes('gog-games.com')
+      detectedStore.includes('gog-games')
     );
     const supportLine = isUnofficialPage
       ? `<span style="font-size:11px;color:rgba(255,255,255,0.75);margin-right:8px">${escapeOverlay(chrome.i18n.getMessage('overlaySupportDevs') || 'Support developers — get a deal:')}</span>`
@@ -1234,7 +1248,7 @@
         <span style="font-weight:700">${escapeOverlay(game.title || '')}</span>
         <span style="color:rgba(255,255,255,0.5)">|</span>
         <span>🏪 <b>${retailStr}</b></span>
-        <span>🔑 <b>${keyStr}</b></span>
+        ${keyshopBlock}
         <span style="color:rgba(255,255,255,0.5)">|</span>
         <span style="font-weight:900;font-size:15px;color:#4ade80">${escapeOverlay(chrome.i18n.getMessage('overlayBest', [bestStr]) || 'Best: ' + bestStr)}</span>
         ${histTag}
@@ -1245,11 +1259,24 @@
 
     overlayEl.style.cssText = `
       position: fixed; bottom: 0; left: 0; right: 0; z-index: 2147483647;
-      background: rgba(15,15,26,0.96); backdrop-filter: blur(12px);
+      background: ${isUnofficialPage ? '#048044' : 'rgba(15,15,26,0.96)'}; 
+      backdrop-filter: blur(12px);
       padding: 10px 20px; font-family: 'Lato', -apple-system, sans-serif;
-      font-size: 13px; color: #e8e6ef; border-top: 1px solid rgba(255,255,255,0.08);
+      font-size: 14.5px; color: #ffffff; border-top: 1px solid rgba(255,255,255,0.08);
       box-shadow: 0 -4px 20px rgba(0,0,0,0.35); animation: ggSlideUp 0.3s ease-out;
     `;
+    
+    if (isUnofficialPage) {
+        overlayEl.innerHTML = overlayEl.innerHTML.replace(
+            /(GG\.deals)<\/span>/,
+            '$1</span><span style="margin-left:8px; font-weight:800; font-size:15px; color:#fff;">🛑 Is downloading this really worth the malware risk?</span>'
+        );
+        // Make sure all muted texts are pure white so they contrast the green bg
+        overlayEl.innerHTML = overlayEl.innerHTML.replace(/rgba\(255,255,255,0\.5\)/g, 'rgba(255,255,255,0.9)');
+        overlayEl.innerHTML = overlayEl.innerHTML.replace(/color:#4ade80/g, 'color:#ffe347; font-size:16px'); // High contrast best price
+        overlayEl.innerHTML = overlayEl.innerHTML.replace(/color:#048044/g, 'color:#ffffff'); // Logo to white
+    }
+
 
     const style = document.createElement('style');
     style.textContent = `@keyframes ggSlideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }`;
@@ -1267,4 +1294,6 @@
     const d = document.createElement('div'); d.textContent = text; return d.innerHTML;
   }
 })();
+
+
 

@@ -22,6 +22,7 @@
   --gg-hist-bg: #f2f9f4;
   --gg-hist-border: #d4edda;
   --gg-input-bg: #ffffff;
+  --gg-surface-bg: #ffffff;
 }
 
 /* ── Dark theme ────────────────────────────────────────── */
@@ -41,6 +42,7 @@ body.theme-dark {
   --gg-hist-border: #254a32;
   --gg-input-bg: #2a2a42;
   --gg-green-bg: #1a3328;
+  --gg-surface-bg: #22223a;
 }
 
 /* ── OLED Black theme ──────────────────────────────────── */
@@ -60,6 +62,7 @@ body.theme-oled {
   --gg-hist-border: #1a3322;
   --gg-input-bg: #141414;
   --gg-green-bg: #0a1a0f;
+  --gg-surface-bg: #0d0d0d;
 }
 
 /* ── Accent Colors ─────────────────────────────────────── */
@@ -658,6 +661,37 @@ button:disabled {
   font-size: 0.78rem;
   color: var(--gg-text-sec);
   padding: 2px 0;
+}
+
+.bundle-tier-games {
+  list-style: none;
+  margin: 4px 0 6px 0;
+  padding-left: 0;
+  font-size: 0.75rem;
+  color: var(--gg-text-sec);
+}
+
+.bundle-tier-games .bundle-game-item {
+  padding: 1px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bundle-tier-games .bundle-game-item a {
+  color: var(--gg-text-sec);
+  text-decoration: none;
+}
+
+.bundle-tier-games .bundle-game-item a:hover {
+  color: var(--gg-green);
+  text-decoration: underline;
+}
+
+.bundle-game-more {
+  font-style: italic;
+  color: var(--gg-text-muted);
+  margin-top: 2px;
 }
 
 .bundle-price {
@@ -1557,6 +1591,12 @@ body.theme-oled .error {
   flex-wrap: wrap;
 }
 
+.wishlist-toolbar {
+  margin-bottom: 8px;
+  display: flex;
+  gap: 8px;
+}
+
 .support-card {
   padding: 16px;
   margin-top: 16px;
@@ -1599,4 +1639,51 @@ body.theme-oled .error {
 .footer-heart {
   color: var(--gg-red);
   text-decoration: none;
+}
+
+.ext-version {
+  color: var(--gg-text-muted);
+  font-size: 0.75rem;
+  margin-left: auto;
+}
+
+
+/* Very Detailed Dashboard Custom Styles */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.dashboard-mini-card {
+  background: var(--gg-surface-bg);
+  border: 1px solid var(--gg-border);
+  border-radius: 6px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+}
+
+.dashboard-mini-card:hover {
+  transform: translateY(-2px);
+  border-color: #4ade80;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.dashboard-mini-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--gg-text);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dashboard-mini-price {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #4ade80;
 }

@@ -24,6 +24,7 @@ let userPrefs = {
   checkFreq: 360,
   syncEnabled: true,
   region: 'us',
+  officialOnly: false,
 };
 
 // ── i18n helper ──────────────────────────────────────────────────────────────
@@ -51,6 +52,53 @@ function escapeHtml(t) {
 }
 function escapeAttr(t) {
   return t.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+}
+
+function applyOfficialOnlyToData(data) {
+  if (!userPrefs.officialOnly || !data || typeof data !== 'object') return data;
+  const filtered = {};
+  for (const [id, game] of Object.entries(data)) {
+    if (!game || !game.prices) {
+      filtered[id] = game;
+      continue;
+    }
+    filtered[id] = {
+      ...game,
+      prices: {
+        ...game.prices,
+        currentKeyshops: null,
+        historicalKeyshops: null,
+      },
+    };
+  }
+  return filtered;
+}
+
+/** Normalize API games array: items may be { title, url } or string like "@{title=...; url=...}" */
+function getTierGames(tier, maxShow = 15) {
+  const raw = tier.games;
+  if (!Array.isArray(raw) || raw.length === 0) return [];
+  const out = [];
+  for (const g of raw) {
+    if (typeof g === 'object' && g != null && g.title) {
+      out.push({ title: g.title, url: g.url || '' });
+    } else if (typeof g === 'string') {
+      const m = g.match(/title=([^;]+);\s*url=(\S+)/);
+      if (m) out.push({ title: m[1].trim(), url: m[2].trim() });
+    }
+  }
+  return out.slice(0, maxShow);
+}
+
+function renderBundleTierGames(tier, gamesLabel, maxShow = 15) {
+  const games = getTierGames(tier, maxShow);
+  const total = Array.isArray(tier.games) ? tier.games.length : 0;
+  if (games.length === 0) return '';
+  let h = '<ul class="bundle-tier-games">';
+  for (const g of games) h += `<li class="bundle-game-item"><a class="game-link" href="${escapeAttr(g.url)}" target="_blank" rel="noopener">${escapeHtml(g.title)}</a></li>`;
+  if (total > maxShow) h += `<li class="bundle-game-more">+${total - maxShow} more ${gamesLabel}</li>`;
+  h += '</ul>';
+  return h;
 }
 
 // ── Toast notifications ──────────────────────────────────────────────────────
@@ -246,6 +294,7 @@ function switchTab(tab) {
   if (tab === 'settings') displaySettings();
   if (tab === 'bundles') loadActiveBundles();
   if (tab === 'search') loadRecentSearches();
+  if (tab === 'dashboard') showDashboard();
 }
 
 // ── Detected games (auto-scan) ───────────────────────────────────────────────
@@ -256,7 +305,7 @@ function parseRepackUrlGame(url) {
   try {
     const u = new URL(url);
     const host = u.hostname.toLowerCase();
-    if (!host.includes('fitgirl-repacks') && !host.includes('igg-games.com') && !host.includes('gog-games.com')) return null;
+    if (!host.includes('fitgirl-repacks') && !host.includes('igg-games.com') && !host.includes('gog-games')) return null;
     const path = u.pathname || '';
     const segments = path.split('/').filter(Boolean);
     const skip = /^(games?|repack|download|category|tag|page|index|search)$/i;
@@ -291,7 +340,7 @@ function loadDetectedGames() {
         if (urlFallback) data = urlFallback;
       }
       if (data) {
-        chrome.runtime.sendMessage({ action: 'gamesDetected', data, fromPopup: true }, () => { });
+        chrome.runtime.sendMessage({ action: 'gamesDetected', data, fromPopup: true });
       }
 
       // For wishlist pages, wait for the full async fetch to complete
@@ -332,7 +381,8 @@ function loadDetectedGames() {
               detectedResults.innerHTML = `<div class="error"><span class="error-icon">⚠️</span><div><div>${friendlyError(priceResp?.error)}</div><div class="error-actions"><button class="btn-sm btn-outline" data-action="retryDetected">Retry</button></div></div></div>`;
               return;
             }
-            const validEntries = Object.entries(priceResp.data).filter(([, v]) => v && v.prices);
+            const data = applyOfficialOnlyToData(priceResp.data);
+            const validEntries = Object.entries(data).filter(([, v]) => v && v.prices);
             const validCount = validEntries.length;
             if (validCount !== totalIds.length) {
               scanBadge.textContent = isWishlist
@@ -343,7 +393,32 @@ function loadDetectedGames() {
               detectedResults.innerHTML = `<div class="empty"><span class="empty-icon">🔍</span>${escapeHtml(t('noPricingData'))}</div>`;
               return;
             }
-            renderDetectedResults(validEntries, isWishlist, storeName);
+            const renderDetected = (entries) => {
+              const activeTab = document.querySelector('.tab-btn.active')?.dataset?.tab;
+              if (activeTab === 'dashboard') switchTab('detected');
+              renderDetectedResults(entries, isWishlist, storeName);
+            };
+
+            // On GG.deals pages, prefer the page hero image for the first detected game.
+            if (storeName.toLowerCase() === 'gg.deals' && validEntries.length > 0) {
+              chrome.tabs.sendMessage(tab.id, { action: 'getPrimaryImage' }, (imgResp) => {
+                const pageImage = imgResp?.image;
+                if (pageImage) {
+                  const [firstId, firstGame] = validEntries[0];
+                  validEntries[0] = [firstId, {
+                    ...firstGame,
+                    info: {
+                      ...(firstGame.info || {}),
+                      image: pageImage,
+                    },
+                  }];
+                }
+                renderDetected(validEntries);
+              });
+              return;
+            }
+
+            renderDetected(validEntries);
           }
         );
       });
@@ -510,7 +585,8 @@ function renderLargeWishlistImport(allIds, storeName, tabId) {
             detectedResults.innerHTML = `<div class="error"><span class="error-icon">⚠️</span><div><div>${friendlyError(priceResp?.error)}</div><div class="error-actions"><button class="btn-sm btn-outline" data-action="retryDetected">Retry</button></div></div></div>`;
             return;
           }
-          const validEntries = Object.entries(priceResp.data).filter(([, v]) => v && v.prices);
+          const data = applyOfficialOnlyToData(priceResp.data);
+          const validEntries = Object.entries(data).filter(([, v]) => v && v.prices);
           if (validEntries.length === 0) {
             detectedResults.innerHTML = `<div class="empty"><span class="empty-icon">🔍</span>${escapeHtml(t('noPricingDataShort'))}</div>`;
             return;
@@ -590,22 +666,42 @@ function renderDetectedResults(validEntries, isWishlistPage, storeName) {
   }
 }
 
-// ── Smart Deal Dashboard ─────────────────────────────────────────────────────
+// ── Smart Deal Dashboard ──
+
+function renderTrendChart(prices) {
+  if (!prices || (!prices.historicalRetail && !prices.historicalKeyshops)) return '';
+  const cR = parseFloat(prices.currentRetail) || Infinity;
+  const cK = parseFloat(prices.currentKeyshops) || Infinity;
+  const hR = parseFloat(prices.historicalRetail) || Infinity;
+  const hK = parseFloat(prices.historicalKeyshops) || Infinity;
+  const current = Math.min(cR, cK);
+  const hist = Math.min(hR, hK);
+  if (current === Infinity || hist === Infinity) return '';
+  
+  const isDrop = current <= hist;
+  const color = isDrop ? '#048044' : '#e6a400';
+  const y1 = isDrop ? 10 : 30;
+  const y2 = isDrop ? 30 : 10;
+  
+  return `<div style="display:flex; flex-direction:column; align-items:flex-end; margin-left:auto; margin-top:8px;"><span style="font-size:0.65rem; color:var(--gg-text-muted); text-transform:uppercase; letter-spacing:0.5px;">Price Trend</span><svg class="sparkline" width="60" height="30" viewBox="0 0 60 40" style="margin-left:auto; opacity:0.8">
+    <polyline points="0,${y1} 30,${y1} 60,${y2}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="60" cy="${y2}" r="4" fill="${color}" />
+  </svg></div>`;
+}
 
 function showDashboard() {
   scanBadge.style.display = 'none';
-
   if (wishlist.length === 0) {
-    detectedResults.innerHTML = `
+    const hasDetectedGames = scanBadge && !scanBadge.classList.contains('empty') && !!scanBadge.textContent.trim();
+    document.getElementById('dashboardResults').innerHTML = `
       <div class="empty">
-        <span class="empty-icon">🎮</span>
+        <span class="empty-icon">🤷</span>
         ${escapeHtml(t('emptyDashboard'))}<br>
         ${escapeHtml(t('emptyDashboardHint'))}
+        ${hasDetectedGames ? '<br><button class="btn-sm btn-outline" data-action="openDetectedTab" style="margin-top:8px">Open detected games</button>' : ''}
       </div>`;
     return;
   }
-
-  // Check rate limit before attempting to load — don't waste a call if we're at 0
   chrome.storage.local.get(['rateLimitInfo'], (stored) => {
     const rl = stored.rateLimitInfo;
     if (rl && rl.remaining !== undefined && rl.remaining <= 0) {
@@ -617,283 +713,149 @@ function showDashboard() {
 }
 
 function renderCachedDashboard(rl) {
-  const gamesWithPrices = wishlist.filter((w) => w.lastPrice != null);
-
-  let resetMsg = '';
-  if (rl && rl.reset) {
-    const mins = Math.ceil((rl.reset * 1000 - Date.now()) / 60000);
-    if (mins > 0) resetMsg = ' ' + t('resetsIn', String(mins));
-  }
-  if (rl) updateRateLimit(rl);
-
-  let html = `<div class="dashboard-section">
-    <div class="dashboard-section-header" style="color:var(--gg-orange)">
-      <span class="dash-icon">⏳</span> ${escapeHtml(t('rateLimitReached'))}${escapeHtml(resetMsg)}
-      <button class="btn-sm btn-outline" data-action="retryDashboard" style="margin-left:auto">${escapeHtml(t('retry'))}</button>
-    </div>
-  </div>`;
-
+  // Use pricesCache instead of lastPrice
+  const gamesWithPrices = wishlist.filter((w) => w.pricesCache != null);
+  const dashboardEl = document.getElementById('dashboardResults');
+  
   if (gamesWithPrices.length === 0) {
-    html += `<div class="empty"><span class="empty-icon">📊</span>
-      ${escapeHtml(t('noCachedData'))}<br>${escapeHtml(t('noCachedDataDesc'))}</div>`;
-    detectedResults.innerHTML = html;
+    let html = `<div class="dashboard-section">
+      <div class="dashboard-section-header"><span class="dash-icon">📊</span> ${escapeHtml(t('trackedGames', String(wishlist.length)))}</div>`;
+    for (const w of wishlist.slice(0, 12)) {
+      html += `<div class="dashboard-mini-card" data-id="${escapeAttr(w.id)}">
+        <div class="dashboard-mini-title">${escapeHtml(w.title || `Steam App ${w.id}`)}</div>
+        <div class="dashboard-mini-price" style="color:var(--gg-text-muted)">—</div>
+      </div>`;
+    }
+    html += `</div>
+      <div class="empty" style="padding-top:12px">
+        ${escapeHtml(t('loadingWishlist'))}<br>
+        <button class="btn-sm btn-outline" data-action="retryDashboard" style="margin-top:8px">${escapeHtml(t('retry'))}</button>
+      </div>`;
+    dashboardEl.innerHTML = html;
+    dashboardEl.querySelectorAll('.dashboard-mini-card').forEach(el => {
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', () => {
+        const gameName = el.querySelector('.dashboard-mini-title').textContent;
+        document.getElementById('gameId').value = gameName || '';
+        document.getElementById('searchBtn').click();
+        switchTab('search');
+      });
+    });
     return;
   }
 
-  html += `<div class="dashboard-section">
-    <div class="dashboard-section-header"><span class="dash-icon">📊</span> ${escapeHtml(t('trackedGamesOf', String(gamesWithPrices.length), String(wishlist.length)))}</div>`;
+  // Calculate Metrics
+  let totalRetail = 0;
+  let totalBest = 0;
+  let histLows = [];
+  let recentDrops = [];
 
-  for (const g of gamesWithPrices) {
-    let statusTag = '';
-    if (g.addedPrice != null && g.lastPrice != null) {
-      const diff = g.lastPrice - g.addedPrice;
-      if (diff < -0.01) {
-        const pct = ((Math.abs(diff) / g.addedPrice) * 100).toFixed(0);
-        statusTag = `<span class="pill-badge pill-discount">▼ ${pct}%</span>`;
-      } else if (diff > 0.01) {
-        statusTag = `<span class="pill-badge pill-higher">▲ ${escapeHtml(t('pillHigher'))}</span>`;
-      } else {
-        statusTag = `<span class="pill-badge pill-same">— ${escapeHtml(t('pillSame'))}</span>`;
-      }
+  gamesWithPrices.forEach(g => {
+    const p = g.pricesCache;
+    if (!p) return;
+    const cR = parseFloat(p.currentRetail) || Infinity;
+    const cK = parseFloat(p.currentKeyshops) || Infinity;
+    const hR = parseFloat(p.historicalRetail) || Infinity;
+    const hK = parseFloat(p.historicalKeyshops) || Infinity;
+    const best = Math.min(cR, cK);
+    const hist = Math.min(hR, hK);
+    
+    // Add to savings metrics
+    let retailPrice = parseFloat(p.currentRetail);
+    if (isNaN(retailPrice) || retailPrice < best) retailPrice = best; // Fallback so we don't break arithmetic
+    
+    if (best !== Infinity && !isNaN(best)) {
+       totalRetail += retailPrice;
+       totalBest += best;
     }
 
-    const imgSrc = `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${g.id}/header.jpg`;
-    const priceStr = `${g.lastPrice} ${g.lastCurrency || 'USD'}`;
+    if (best <= hist && best !== Infinity) {
+      histLows.push({ ...g, best, hist });
+    } else if (best < retailPrice && best !== Infinity) {
+      recentDrops.push({ ...g, best });
+    }
+  });
 
-    html += `<div class="dashboard-mini-card" data-action="searchGame" data-id="${g.id}">
-      <img class="dashboard-mini-img" src="${escapeHtml(imgSrc)}" alt="${escapeHtml(g.title)}">
-      <div class="dashboard-mini-info">
-        <div class="dashboard-mini-title">${escapeHtml(g.title)}</div>
-        <div class="dashboard-mini-prices">
-          <div class="dashboard-mini-price">${escapeHtml(priceStr)}</div>
+  const savingsAmount = (totalRetail - totalBest).toFixed(2);
+  const savingsPct = totalRetail > 0 ? ((savingsAmount / totalRetail) * 100).toFixed(0) : 0;
+  totalRetail = totalRetail.toFixed(2);
+  totalBest = totalBest.toFixed(2);
+
+  // Build the Detailed Dashboard UI!
+  let html = `
+    <div style="background:var(--gg-surface-bg); padding:16px; border-radius:8px; margin-bottom:16px; border:1px solid var(--gg-border); text-align:center;">
+       <div style="font-size:0.75rem; color:var(--gg-text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Total Wishlist Savings Available</div>
+       <div style="font-size:1.8rem; font-weight:900; color:#4ade80;">$${savingsAmount} <span style="font-size:1rem; opacity:0.8;">(-${savingsPct}%)</span></div>
+       <div style="font-size:0.85rem; color:var(--gg-text-muted); margin-top:4px;">Buy everything now for $${totalBest} instead of $${totalRetail}</div>
+    </div>
+  `;
+
+  if (histLows.length > 0) {
+    html += `<div class="section-label" style="display:flex; justify-content:space-between; align-items:center;"><span>⭐ At Historical Low</span><span style="border-radius:12px; background:#e6a400; color:#18181c; padding:2px 8px; font-size:11px; font-weight:bold;">${histLows.length}</span></div>`;
+    html += `<div class="dashboard-grid">`;
+    histLows.slice(0, 4).forEach((g) => {
+      const dropPrice = g.best;
+      const currency = g.pricesCache?.currency || 'USD';
+      html += `
+        <div class="dashboard-mini-card" data-id="${g.id}">
+          <div class="dashboard-mini-title">${escapeHtml(g.title)}</div>
+          <div class="dashboard-mini-price">${dropPrice} ${currency}</div>
         </div>
-        <div class="dashboard-mini-meta">${statusTag}</div>
-      </div>
-    </div>`;
+      `;
+    });
+    html += `</div>`;
   }
-  html += '</div>';
 
-  detectedResults.innerHTML = html;
+  if (recentDrops.length > 0) {
+    html += `<div class="section-label">📉 Recent Discounts</div>`;
+    html += `<div class="dashboard-grid">`;
+    recentDrops.slice(0, 6).forEach((g) => {
+      const dropPrice = g.best;
+      const currency = g.pricesCache?.currency || 'USD';
+      html += `
+        <div class="dashboard-mini-card" data-id="${g.id}">
+          <div class="dashboard-mini-title">${escapeHtml(g.title)}</div>
+          <div class="dashboard-mini-price">${dropPrice} ${currency}</div>
+        </div>
+      `;
+    });
+    html += `</div>`;
+  }
+
+  dashboardEl.innerHTML = html;
+  
+  // Attach listeners
+  dashboardEl.querySelectorAll('.dashboard-mini-card').forEach(el => {
+    el.style.cursor = 'pointer';
+    el.addEventListener('click', () => {
+      const gameName = el.querySelector('.dashboard-mini-title').textContent;
+      document.getElementById('gameId').value = gameName || '';
+      document.getElementById('searchBtn').click();
+      switchTab('search');
+    });
+  });
 }
 
 function loadDashboardData() {
-  showLoadingSpinner(detectedResults, t('buildingDashboard'));
-
-  const ids = wishlist.map((w) => w.id);
-  chrome.runtime.sendMessage({ action: 'lookupByIds', ids, region: regionSelect.value }, (resp) => {
-    if (resp && resp.rateLimit) updateRateLimit(resp.rateLimit);
-    if (!resp || !resp.success) {
-      // Fall back to cached data if available
-      const gamesWithPrices = wishlist.filter((w) => w.lastPrice != null);
-      if (gamesWithPrices.length > 0) {
-        renderCachedDashboard(resp?.rateLimit || null);
-        return;
-      }
-      const errMsg = friendlyError(resp?.error);
-      detectedResults.innerHTML = `
-        <div class="empty"><span class="empty-icon">⚠️</span>
-        ${errMsg}<br>
-        <button class="btn-sm btn-outline" data-action="retryDashboard" style="margin-top:8px">Retry</button></div>`;
-      return;
-    }
-
-    const priceDrops = [];
-    const historicalLows = [];
-    const allGames = [];
-
-    for (const item of wishlist) {
-      const game = resp.data[item.id];
-      if (!game || !game.prices) continue;
-      const best = getBestPrice(game.prices);
-      const currency = game.prices.currency || 'USD';
-      if (best === null) continue;
-
-      const score = calculateDealScore(game.prices, false);
-
-      // Update stored price
-      item.lastPrice = best;
-      item.lastCurrency = currency;
-
-      const entry = { ...item, currentPrice: best, currency, game, score };
-
-      // Check price drop
-      if (item.addedPrice != null && best < item.addedPrice - 0.01) {
-        entry.diff = item.addedPrice - best;
-        priceDrops.push(entry);
-      }
-
-      // Check historical low
-      const histLow = Math.min(
-        game.prices.historicalRetail ? parseFloat(game.prices.historicalRetail) : Infinity,
-        game.prices.historicalKeyshops ? parseFloat(game.prices.historicalKeyshops) : Infinity
-      );
-      if (histLow !== Infinity && best <= histLow * 1.05) {
-        entry.histLow = histLow;
-        entry.isHistLow = true;
-        historicalLows.push(entry);
-      }
-
-      allGames.push(entry);
-    }
-    saveData(); // persist updated prices
-
-    let html = '';
-
-    // Section 1: Price Drops
-    if (priceDrops.length > 0) {
-      priceDrops.sort((a, b) => b.diff - a.diff);
-      html += `<div class="dashboard-section">
-        <div class="dashboard-section-header"><span class="dash-icon">📉</span> ${escapeHtml(t('priceDropsSinceAdded'))}</div>`;
-      for (const d of priceDrops.slice(0, 5)) {
-        const pct = ((d.diff / d.addedPrice) * 100).toFixed(0);
-        let scoreHtml = '';
-        if (userPrefs.dealScores && d.score !== null) {
-          scoreHtml = `
-            <div class="dashboard-mini-score-col">
-              <span class="dashboard-mini-score-label">${escapeHtml(t('dealScoreLabel'))}</span>
-              ${dealScoreBadge(d.score)}
-            </div>
-          `;
+  const idsToLoad = wishlist.map((w) => w.id);
+  const dashboardEl = document.getElementById('dashboardResults');
+  showLoadingSpinner(dashboardEl, t('loadingWishlist'));
+  
+  chrome.runtime.sendMessage({ action: 'lookupByIds', ids: idsToLoad, region: regionSelect.value }, (resp) => {
+    if (resp && resp.success) {
+      const data = applyOfficialOnlyToData(resp.data);
+      // Update cache
+      wishlist.forEach((w) => {
+        if (data[w.id]) {
+            w.pricesCache = data[w.id].prices;
         }
-
-        const p = d.game.prices;
-        const retail = p.currentRetail ? parseFloat(p.currentRetail) : null;
-        const keyshop = p.currentKeyshops ? parseFloat(p.currentKeyshops) : null;
-        let sub = '';
-        if (retail !== null && keyshop !== null) sub = `<div class="dashboard-mini-subprice">🏪 ${retail} · 🔑 ${keyshop} ${d.currency}</div>`;
-
-        const imgSrc = (d.game && d.game.info && d.game.info.image) ? d.game.info.image : 'images/icon-48.png';
-
-        html += `<div class="dashboard-mini-card" data-action="searchGame" data-id="${d.id}">
-          <img class="dashboard-mini-img" src="${escapeHtml(imgSrc)}" alt="${escapeHtml(d.title)}">
-          <div class="dashboard-mini-info">
-            <div class="dashboard-mini-title">${escapeHtml(d.title)}</div>
-            <div class="dashboard-mini-prices">
-              <div class="dashboard-mini-price">${d.currentPrice} ${d.currency}</div>
-              ${sub}
-            </div>
-            <div class="dashboard-mini-meta">
-              <span class="pill-badge pill-discount">▼ ${pct}%</span>
-              <span style="font-size:0.65rem;color:var(--gg-text-muted)">${escapeHtml(t('wasPrice', String(d.addedPrice)))}</span>
-            </div>
-          </div>
-          ${scoreHtml}
-        </div>`;
-      }
-      html += '</div>';
+      });
+      saveData();
     }
-
-    // Section 2: Historical Lows
-    if (historicalLows.length > 0) {
-      html += `<div class="dashboard-section">
-        <div class="dashboard-section-header"><span class="dash-icon">⭐</span> ${escapeHtml(t('atHistoricalLow'))}</div>`;
-      for (const h of historicalLows.slice(0, 5)) {
-        let scoreHtml = '';
-        if (userPrefs.dealScores && h.score !== null) {
-          scoreHtml = `
-            <div class="dashboard-mini-score-col">
-              <span class="dashboard-mini-score-label">${escapeHtml(t('dealScoreLabel'))}</span>
-              ${dealScoreBadge(h.score)}
-            </div>
-          `;
-        }
-
-        const p = h.game.prices;
-        const retail = p.currentRetail ? parseFloat(p.currentRetail) : null;
-        const keyshop = p.currentKeyshops ? parseFloat(p.currentKeyshops) : null;
-        let sub = '';
-        if (retail !== null && keyshop !== null) sub = `<div class="dashboard-mini-subprice">🏪 ${retail} · 🔑 ${keyshop} ${h.currency}</div>`;
-
-        const imgSrc = (h.game && h.game.info && h.game.info.image) ? h.game.info.image : 'images/icon-48.png';
-
-        html += `<div class="dashboard-mini-card" data-action="searchGame" data-id="${h.id}">
-          <img class="dashboard-mini-img" src="${escapeHtml(imgSrc)}" alt="${escapeHtml(h.title)}">
-          <div class="dashboard-mini-info">
-            <div class="dashboard-mini-title">${escapeHtml(h.title)}</div>
-            <div class="dashboard-mini-prices">
-              <div class="dashboard-mini-price">${h.currentPrice} ${h.currency}</div>
-              ${sub}
-            </div>
-            <div class="dashboard-mini-meta">
-              <span class="pill-badge pill-low">⭐ Low</span>
-              <span style="font-size:0.65rem;color:var(--gg-text-muted)">${escapeHtml(t('histLow', String(h.histLow)))}</span>
-            </div>
-          </div>
-          ${scoreHtml}
-        </div>`;
-      }
-      html += '</div>';
-    }
-
-    // Section 3: All tracked games with current prices — ALWAYS shown
-    html += `<div class="dashboard-section">
-      <div class="dashboard-section-header"><span class="dash-icon">📊</span> ${escapeHtml(t('trackedGames', String(allGames.length)))}</div>`;
-    for (const g of allGames) {
-      let statusTag = '';
-      if (g.diff && g.diff > 0) {
-        const pct = ((g.diff / g.addedPrice) * 100).toFixed(0);
-        statusTag = `<span class="pill-badge pill-discount">▼ ${pct}%</span>`;
-      } else if (g.addedPrice != null && g.currentPrice > g.addedPrice + 0.01) {
-        statusTag = `<span class="pill-badge pill-higher">▲ ${escapeHtml(t('pillHigher'))}</span>`;
-      } else if (g.addedPrice != null) {
-        statusTag = `<span class="pill-badge pill-same">— ${escapeHtml(t('pillSame'))}</span>`;
-      }
-      if (g.isHistLow) {
-        statusTag += `<span class="pill-badge pill-low">⭐ ${escapeHtml(t('pillLow'))}</span>`;
-      }
-
-      let scoreHtml = '';
-      if (userPrefs.dealScores && g.score !== null) {
-        scoreHtml = `
-          <div class="dashboard-mini-score-col">
-            <span class="dashboard-mini-score-label">${escapeHtml(t('dealScoreLabel'))}</span>
-            ${dealScoreBadge(g.score)}
-          </div>
-        `;
-      }
-
-      // Get official + keyshop prices for breakdown
-      const p = g.game.prices;
-      const retail = p.currentRetail ? parseFloat(p.currentRetail) : null;
-      const keyshop = p.currentKeyshops ? parseFloat(p.currentKeyshops) : null;
-
-      let subpriceHtml = '';
-      if (retail !== null && keyshop !== null) {
-        subpriceHtml = `<div class="dashboard-mini-subprice">🏪 ${retail} · 🔑 ${keyshop} ${g.currency}</div>`;
-      } else if (retail !== null) {
-        subpriceHtml = `<div class="dashboard-mini-subprice">🏪 ${escapeHtml(t('official'))}: ${retail} ${g.currency}</div>`;
-      } else if (keyshop !== null) {
-        subpriceHtml = `<div class="dashboard-mini-subprice">🔑 ${escapeHtml(t('keyshop'))}: ${keyshop} ${g.currency}</div>`;
-      }
-
-      // Extract image URL from GG.deals API response, or fallback to exact Steam cover art
-      const imgSrc = (g.game && g.game.info && g.game.info.image)
-        ? g.game.info.image
-        : `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${g.id}/header.jpg`;
-
-      html += `<div class="dashboard-mini-card" data-action="searchGame" data-id="${g.id}">
-        <img class="dashboard-mini-img" src="${escapeHtml(imgSrc)}" alt="${escapeHtml(g.title)}">
-        <div class="dashboard-mini-info">
-          <div class="dashboard-mini-title">${escapeHtml(g.title)}</div>
-          <div class="dashboard-mini-prices">
-            <div class="dashboard-mini-price">${g.currentPrice} ${g.currency}</div>
-            ${subpriceHtml}
-          </div>
-          <div class="dashboard-mini-meta">
-            ${statusTag}
-          </div>
-        </div>
-        ${scoreHtml}
-      </div>`;
-    }
-    html += '</div>';
-
-    detectedResults.innerHTML = html;
+    renderCachedDashboard(null);
   });
 }
-window.showDashboard = showDashboard;
 
-// ── Manual search ────────────────────────────────────────────────────────────
 
 let searchDebounce = null;
 searchBtn.addEventListener('click', performSearch);
@@ -960,7 +922,8 @@ function handleSearchResponse(resp) {
     searchResults.innerHTML = `<div class="error"><span class="error-icon">⚠️</span><div><div>${friendlyError(resp?.error)}</div><div class="error-actions"><button class="btn-sm btn-outline" data-action="retrySearch">Retry</button></div></div></div>`;
     return;
   }
-  const entries = Object.entries(resp.data || {}).filter(([, v]) => v && v.prices);
+  const data = applyOfficialOnlyToData(resp.data || {});
+  const entries = Object.entries(data).filter(([, v]) => v && v.prices);
   if (entries.length === 0) {
     searchResults.innerHTML = `<div class="empty"><span class="empty-icon">🔍</span>${escapeHtml(t('noSearchResults'))}</div>`;
     return;
@@ -1068,18 +1031,34 @@ function renderGameCard(id, game) {
   const isHistLow = (histRetail !== null && currentRetail !== null && currentRetail <= histRetail) ||
     (histKey !== null && currentKey !== null && currentKey <= histKey);
   const histLowTag = isHistLow ? `<div class="historical-low-tag">⭐ ${escapeHtml(t('atHistoricalLowTag'))}</div>` : '';
+  const chartHtml2 = renderTrendChart(game.prices);
 
   const history = priceHistory[id] || [];
   const chartHtml = history.length > 1 ? generateChart(history, currency) : '';
   const inWishlist = wishlist.some((w) => w.id === id);
 
-  const imgSrc = (game.info && game.info.image)
-    ? game.info.image
-    : `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${id}/header.jpg`;
+  const imgCandidates = [
+    // Prefer Steam app artwork to match what users see on store pages.
+    `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${id}/header.jpg`,
+    `https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/header.jpg`,
+    `https://cdn.akamai.steamstatic.com/steam/apps/${id}/header.jpg`,
+    game?.info?.image,
+    game?.image,
+    game?.thumbnail,
+    game?.cover,
+  ].filter(Boolean);
+  const imgSrc = imgCandidates[0];
+  const imgFallbacks = [
+    `https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/capsule_616x353.jpg`,
+    `https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/library_600x900_2x.jpg`,
+    `https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/capsule_231x87.jpg`,
+    `https://cdn.akamai.steamstatic.com/steam/apps/${id}/header.jpg`,
+    `https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/header.jpg`,
+  ].join('|');
 
   return `<div class="game-card" data-game-id="${id}">
     <div class="game-card-body">
-      <img class="game-card-img" src="${escapeHtml(imgSrc)}" alt="${escapeHtml(game.title || '')}">
+      <img class="game-card-img" src="${escapeHtml(imgSrc)}" data-fallbacks="${escapeAttr(imgFallbacks)}" alt="${escapeHtml(game.title || '')}">
       <div class="game-card-content">
         <div class="game-title-row">
           <div class="game-title">${escapeHtml(game.title || 'Unknown')}</div>
@@ -1089,7 +1068,7 @@ function renderGameCard(id, game) {
           ${priceCol(t('officialStores'), p.currentRetail, retailDiscount, !bestDealIsKey && retailDiscount)}
           ${priceCol(t('keyshops'), p.currentKeyshops, keyDiscount, bestDealIsKey)}
         </div>
-        ${histHtml}${histLowTag}${chartHtml}
+        ${histHtml}${histLowTag}${chartHtml2}
       </div>
     </div>
     <div class="game-actions">
@@ -1119,22 +1098,25 @@ function generateChart(history, currency) {
 // ── Card event listeners ─────────────────────────────────────────────────────
 
 function attachCardListeners(container) {
-  container.querySelectorAll('.add-wl-btn').forEach((btn) => {
+  container.querySelectorAll('.add-wl-btn, .remove-wl-btn').forEach((btn) => {
+    if (btn.dataset.wlAttached) return;
+    btn.dataset.wlAttached = 'true';
     btn.addEventListener('click', () => {
-      addToWishlist(btn.dataset.id, btn.dataset.title, parseFloat(btn.dataset.price) || null);
-      btn.textContent = `♥ ${t('wishlisted')}`;
-      btn.classList.remove('btn-green', 'add-wl-btn');
-      btn.classList.add('btn-danger', 'remove-wl-btn');
-      showToast(t('addedToWishlist', btn.dataset.title), 'success');
-    });
-  });
-  container.querySelectorAll('.remove-wl-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      removeFromWishlist(btn.dataset.id);
-      btn.textContent = `♡ ${t('wishlistBtn')}`;
-      btn.classList.remove('btn-danger', 'remove-wl-btn');
-      btn.classList.add('btn-green', 'add-wl-btn');
-      showToast(t('removedFromWishlist'), 'info');
+      if (btn.classList.contains('remove-wl-btn')) {
+        removeFromWishlist(btn.dataset.id);
+        btn.textContent = `🤍 ${t('wishlistBtn')}`;
+        btn.classList.remove('btn-danger', 'remove-wl-btn');
+        btn.classList.add('btn-green', 'add-wl-btn');
+        showToast(t('removedFromWishlist'), 'info');
+      } else {
+        const titleEl = btn.closest('.game-card, .dashboard-mini-card')?.querySelector('.game-title, .dashboard-mini-title');
+        const title = titleEl ? titleEl.textContent : 'Unknown Game';
+        addToWishlist(btn.dataset.id, title, null);
+        btn.textContent = `♥ ${t('wishlisted')}`;
+        btn.classList.remove('btn-green', 'add-wl-btn');
+        btn.classList.add('btn-danger', 'remove-wl-btn');
+        showToast(t('addedToWishlist', title), 'success');
+      }
     });
   });
   container.querySelectorAll('.bundle-btn').forEach((btn) => {
@@ -1152,7 +1134,10 @@ function attachCardListeners(container) {
         let h = '';
         for (const b of resp.data[id].bundles.slice(0, 3)) {
           h += `<div class="bundle-card"><div class="bundle-title">${escapeHtml(b.title)}</div>`;
-          for (const tr of b.tiers) h += `<div class="bundle-tier"><span class="bundle-price">${tr.price} ${tr.currency}</span> · ${tr.gamesCount || '?'} ${t('games')}</div>`;
+          for (const tr of b.tiers) {
+            h += `<div class="bundle-tier"><span class="bundle-price">${tr.price} ${tr.currency}</span> · ${tr.gamesCount || '?'} ${t('games')}</div>`;
+            h += renderBundleTierGames(tr, t('games'));
+          }
           if (b.url) h += `<a class="game-link" href="${b.url}" target="_blank" rel="noopener" style="display:block;margin-top:4px">${escapeHtml(t('viewBundle'))}</a>`;
           h += '</div>';
         }
@@ -1234,7 +1219,12 @@ function loadActiveBundles() {
             <div class="active-bundle-header"><div class="active-bundle-title" style="margin-right:8px">${escapeHtml(bundleTitle)}</div>${storeBadgeHtml}</div>
             <div class="active-bundle-tiers">`;
 
-      if (b.tiers) for (const tr of b.tiers) h += `<div class="bundle-tier"><span class="bundle-price">${tr.price} ${tr.currency}</span> · ${tr.gamesCount || '?'} ${(tr.gamesCount || 0) > 1 ? t('games') : t('game')}</div>`;
+      if (b.tiers) {
+        for (const tr of b.tiers) {
+          h += `<div class="bundle-tier"><span class="bundle-price">${tr.price} ${tr.currency}</span> · ${tr.gamesCount || '?'} ${(tr.gamesCount || 0) > 1 ? t('games') : t('game')}</div>`;
+          h += renderBundleTierGames(tr, t('games'));
+        }
+      }
 
       h += `</div>${expiryHtml}`;
       if (b.url) h += `<a class="game-link" href="${b.url}" target="_blank" rel="noopener" style="display:block;margin-top:6px">${escapeHtml(t('viewBundle'))}</a>`;
@@ -1325,9 +1315,10 @@ function displayWishlist() {
       btn.disabled = false; btn.textContent = t('checkAllPrices');
       if (resp?.rateLimit) updateRateLimit(resp.rateLimit);
       if (resp?.success) {
+        const data = applyOfficialOnlyToData(resp.data || {});
         let n = 0;
         let titlesUpdated = 0;
-        for (const [id, game] of Object.entries(resp.data)) {
+        for (const [id, game] of Object.entries(data)) {
           if (!game?.prices) continue;
           n++;
           const best = getBestPrice(game.prices);
@@ -1378,12 +1369,13 @@ function loadWishlistItemDetail(id) {
 
   chrome.runtime.sendMessage({ action: 'lookupByIds', ids: [id], region: regionSelect.value }, (resp) => {
     if (resp?.rateLimit) updateRateLimit(resp.rateLimit);
-    if (!resp?.success || !resp.data[id]) {
+    const data = applyOfficialOnlyToData(resp?.data || {});
+    if (!resp?.success || !data[id]) {
       detailEl.innerHTML = `<div style="padding:8px 0"><div class="error" style="margin:0"><span class="error-icon">⚠️</span><div><div>${friendlyError(resp?.error)}</div><div class="error-actions"><button class="btn-sm btn-outline" data-action="retryWishlistDetail" data-id="${id}">Retry</button></div></div></div><div class="wishlist-actions"><button class="btn-sm btn-danger" data-action="removeWishlist" data-id="${id}">✕ Remove</button></div></div>`;
       return;
     }
 
-    const game = resp.data[id], p = game.prices, currency = p.currency || 'USD';
+    const game = data[id], p = game.prices, currency = p.currency || 'USD';
     const currentRetail = p.currentRetail ? parseFloat(p.currentRetail) : null;
     const currentKey = p.currentKeyshops ? parseFloat(p.currentKeyshops) : null;
     const histRetail = p.historicalRetail ? parseFloat(p.historicalRetail) : null;
@@ -1466,7 +1458,10 @@ function loadWishlistItemDetail(id) {
         let h = '';
         for (const b of bR.data[id].bundles.slice(0, 3)) {
           h += `<div class="bundle-card"><div class="bundle-title">${escapeHtml(b.title)}</div>`;
-          for (const tr of b.tiers) h += `<div class="bundle-tier"><span class="bundle-price">${tr.price} ${tr.currency}</span></div>`;
+          for (const tr of b.tiers) {
+            h += `<div class="bundle-tier"><span class="bundle-price">${tr.price} ${tr.currency}</span> · ${tr.gamesCount || '?'} ${t('games')}</div>`;
+            h += renderBundleTierGames(tr, t('games'));
+          }
           if (b.url) h += `<a class="game-link" href="${b.url}" target="_blank" rel="noopener">${escapeHtml(t('viewArrow'))}</a>`;
           h += '</div>';
         }
@@ -1489,6 +1484,7 @@ function saveWishlistAlert(id) {
 
 function getBestPrice(prices) {
   const r = prices.currentRetail ? parseFloat(prices.currentRetail) : null;
+  if (userPrefs.officialOnly) return r;
   const k = prices.currentKeyshops ? parseFloat(prices.currentKeyshops) : null;
   if (r !== null && k !== null) return Math.min(r, k);
   return r ?? k;
@@ -1502,7 +1498,12 @@ window.removeWishlistItem = function (id) {
   if (item) showToast(t('removed', item.title), 'info');
 };
 
-// ── Wishlist Export / Import ─────────────────────────────────────────────────
+// ── Wishlist Export / Import ──
+
+document.getElementById('exportWishlistBtn')?.addEventListener('click', () => {
+    const text = wishlist.map(w => `[${w.lastPrice} ${w.lastCurrency||'USD'}] ${w.title} - https://store.steampowered.com/app/${w.id}`).join('\n');
+    navigator.clipboard.writeText(text).then(() => showToast(t('exportedCopied') || 'Copied to clipboard!', 'success'));
+});
 
 function exportWishlist() {
   const data = JSON.stringify({ version: 1, exported: new Date().toISOString(), wishlist }, null, 2);
@@ -1556,6 +1557,7 @@ function displaySettings() {
   document.getElementById('compactMode').checked = userPrefs.compact;
   document.getElementById('dealScoresEnabled').checked = userPrefs.dealScores;
   document.getElementById('overlayEnabled').checked = userPrefs.overlay;
+  document.getElementById('officialOnly').checked = userPrefs.officialOnly;
   document.getElementById('autoCheckWishlist').checked = userPrefs.autoCheckWishlist;
   document.getElementById('syncEnabled').checked = userPrefs.syncEnabled !== false;
   document.getElementById('checkFreq').value = String(userPrefs.checkFreq || 360);
@@ -1620,6 +1622,11 @@ function wireSettings() {
   document.getElementById('overlayEnabled').addEventListener('change', (e) => {
     userPrefs.overlay = e.target.checked;
     savePrefs();
+  });
+  document.getElementById('officialOnly').addEventListener('change', (e) => {
+    userPrefs.officialOnly = e.target.checked;
+    savePrefs();
+    showToast(e.target.checked ? 'Official stores only enabled' : 'All stores enabled', 'info');
   });
   document.getElementById('autoCheckWishlist').addEventListener('change', (e) => {
     userPrefs.autoCheckWishlist = e.target.checked;
@@ -1698,6 +1705,7 @@ document.body.addEventListener('click', (e) => {
   switch (action) {
     case 'retryDetected': loadDetectedGames(); break;
     case 'retryDashboard': showDashboard(); break;
+    case 'openDetectedTab': switchTab('detected'); loadDetectedGames(); break;
     case 'retrySearch': performSearch(); break;
     case 'retryBundles': bundlesLoaded = false; loadActiveBundles(); break;
     case 'retryWishlistDetail': loadWishlistItemDetail(id); break;
@@ -1738,9 +1746,25 @@ document.addEventListener('error', (e) => {
       e.target.style.display = 'none';
       return;
     }
-    // Prevent infinite loops if default icon itself is somehow missing
+    // Try alternate CDNs/assets first before falling back to extension icon.
+    const queue = (e.target.dataset?.fallbacks || '').split('|').filter(Boolean);
+    if (queue.length > 0) {
+      const next = queue.shift();
+      e.target.dataset.fallbacks = queue.join('|');
+      e.target.src = next;
+      return;
+    }
+    // Prevent infinite loops if default icon itself is somehow missing.
     if (e.target.src && !e.target.src.endsWith('images/icon-128.png')) {
       e.target.src = 'images/icon-128.png';
     }
   }
 }, true);
+
+
+setTimeout(() => {
+    const extVersionEl = document.getElementById('extVersion');
+    if (extVersionEl) {
+        extVersionEl.textContent = 'v' + chrome.runtime.getManifest().version;
+    }
+}, 100);

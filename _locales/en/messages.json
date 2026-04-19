@@ -1,6 +1,6 @@
 {
   "extName": { "message": "GG Buddy" },
-  "extDescription": { "message": "Automatically scan game store pages and find the best deals via GG.deals — works on Steam, Epic, GOG, keyshops, and any gaming site" },
+  "extDescription": { "message": "PC game deals via GG.deals: overlay, wishlists, charts & alerts. Optional Official Stores Only hides keyshops everywhere." },
 
   "tabDetected": { "message": "Detected" },
   "tabSearch": { "message": "Search" },
