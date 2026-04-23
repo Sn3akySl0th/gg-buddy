@@ -4,14 +4,17 @@ const PRICES_ENDPOINT = 'https://api.gg.deals/v1/prices/by-steam-app-id/';
 const BUNDLES_ENDPOINT = 'https://api.gg.deals/v1/bundles/by-steam-app-id/';
 const ACTIVE_BUNDLES_ENDPOINT = 'https://api.gg.deals/v1/bundles/active/';
 const STEAM_SEARCH_URL = 'https://store.steampowered.com/api/storesearch/';
+const FX_API_BASE = 'https://api.frankfurter.app';
 
 const MAX_RETRIES = 3;
 const REQUEST_TIMEOUT_MS = 15000;
+const FX_CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
 
 // In-memory caches
 let priceCache = {};
 let detectedGamesPerTab = {};
 let activeBundlesCache = { data: null, timestamp: 0 };
+let fxRateCache = {};
 
 // ── Startup ──────────────────────────────────────────────────────────────────
 
@@ -120,6 +123,38 @@ function getBackoffMs(attempt) {
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function roundMoney(value) {
+  return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+}
+
+async function getFxRate(fromCurrency, toCurrency) {
+  const from = String(fromCurrency || '').toUpperCase();
+  const to = String(toCurrency || '').toUpperCase();
+  if (!from || !to) throw new Error('Missing currency');
+  if (from === to) return 1;
+
+  const key = `${from}->${to}`;
+  const cached = fxRateCache[key];
+  if (cached && (Date.now() - cached.timestamp) < FX_CACHE_TTL_MS) return cached.rate;
+
+  const url = `${FX_API_BASE}/latest?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`FX API ${resp.status}`);
+  const json = await resp.json();
+  const rate = json?.rates?.[to];
+  if (typeof rate !== 'number' || !isFinite(rate) || rate <= 0) throw new Error('Invalid FX rate');
+
+  fxRateCache[key] = { rate, timestamp: Date.now() };
+  return rate;
+}
+
+async function convertCurrencyAmount(amount, fromCurrency, toCurrency) {
+  const numeric = Number(amount);
+  if (!isFinite(numeric)) throw new Error('Invalid amount');
+  const rate = await getFxRate(fromCurrency, toCurrency);
+  return roundMoney(numeric * rate);
 }
 
 // ── Response validation ──────────────────────────────────────────────────────
@@ -498,27 +533,59 @@ async function checkWishlistPrices() {
 
     const ids = alertItems.map((w) => w.id);
     const prices = await fetchPricesBatch(ids, region);
+    let wishlistChanged = false;
 
     for (const item of alertItems) {
       const game = prices[item.id];
       if (!game || !game.prices) continue;
 
-      const price = officialOnly
-        ? (game.prices.currentRetail ? parseFloat(game.prices.currentRetail) : null)
-        : game.prices.currentRetail
-          ? parseFloat(game.prices.currentRetail)
-          : game.prices.currentKeyshops
-            ? parseFloat(game.prices.currentKeyshops)
-            : null;
+      const retail = game.prices.currentRetail ? parseFloat(game.prices.currentRetail) : null;
+      const keyshop = officialOnly
+        ? null
+        : (game.prices.currentKeyshops ? parseFloat(game.prices.currentKeyshops) : null);
+      // Best (lowest) current price respecting Official Stores Only.
+      let price = null;
+      if (retail !== null && keyshop !== null) price = Math.min(retail, keyshop);
+      else if (retail !== null) price = retail;
+      else if (keyshop !== null) price = keyshop;
 
-      if (price !== null && !isNaN(price) && price < item.alertThreshold) {
+      let threshold = Number(item.alertThreshold);
+      const currentCurrency = String(game.prices.currency || '').toUpperCase();
+      const thresholdCurrency = String(item.alertThresholdCurrency || item.lastCurrency || currentCurrency).toUpperCase();
+      if (
+        isFinite(threshold) &&
+        thresholdCurrency &&
+        currentCurrency &&
+        thresholdCurrency !== currentCurrency
+      ) {
+        try {
+          threshold = await convertCurrencyAmount(threshold, thresholdCurrency, currentCurrency);
+          item.alertThreshold = threshold;
+          item.alertThresholdCurrency = currentCurrency;
+          wishlistChanged = true;
+        } catch {
+          // Keep original threshold if conversion service fails.
+        }
+      }
+
+      // Trigger when the best price is at or below the threshold (historical low).
+      if (price !== null && !isNaN(price) && isFinite(threshold) && price <= threshold) {
         chrome.notifications.create(`price-drop-${item.id}-${Date.now()}`, {
           type: 'basic',
           iconUrl: 'images/icon-128.png',
           title: chrome.i18n.getMessage('notifPriceDrop', [game.title]) || `Price Drop: ${game.title}`,
-          message: chrome.i18n.getMessage('notifPriceDropBody', [String(price), game.prices.currency, String(item.alertThreshold)]) || `Now ${price} ${game.prices.currency} (Alert: ${item.alertThreshold})`,
+          message: chrome.i18n.getMessage('notifPriceDropBody', [String(price), game.prices.currency, String(threshold)]) || `Now ${price} ${game.prices.currency} (Alert: ${threshold})`,
         });
       }
+    }
+    if (wishlistChanged) {
+      await chrome.storage.local.set({ wishlist });
+      try {
+        const syncResult = await chrome.storage.sync.get(['userPrefs']);
+        if (syncResult?.userPrefs?.syncEnabled !== false) {
+          await chrome.storage.sync.set({ wishlist });
+        }
+      } catch { /* ignore sync errors */ }
     }
   } catch (e) {
     console.error('Wishlist price check failed:', e);

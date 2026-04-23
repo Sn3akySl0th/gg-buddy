@@ -14,6 +14,22 @@
 </head>
 
 <body>
+  <div id="onboardingBackdrop" class="onboarding-backdrop hidden" aria-hidden="true">
+    <div class="onboarding-card" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle">
+      <div class="onboarding-step-label" id="onboardingStepLabel"></div>
+      <h2 id="onboardingTitle" class="onboarding-title"></h2>
+      <p class="onboarding-body" id="onboardingBody"></p>
+      <div class="onboarding-dots" id="onboardingDots" aria-hidden="true"></div>
+      <div class="onboarding-actions">
+        <button type="button" class="btn-sm btn-outline" id="onboardingSkip" data-i18n="onboardingSkip">Skip tour</button>
+        <div class="onboarding-actions-right">
+          <button type="button" class="btn-sm btn-outline hidden" id="onboardingBack" data-i18n="onboardingBack">Back</button>
+          <button type="button" class="btn-sm btn-primary" id="onboardingNext" data-i18n="onboardingNext">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="toast-container" id="toastContainer"></div>
 
   <div class="header">
@@ -27,12 +43,12 @@
   </div>
 
   <div class="tabs">
-    <button class="tab-btn active" data-tab="dashboard"><span class="tab-icon">📊</span> <span data-i18n="tabDashboard">Dashboard</span></button>
-    <button class="tab-btn" data-tab="detected" id="detectedTabBtn"><span class="tab-icon">🎯</span> <span data-i18n="tabDetected">Detected</span></button>
-    <button class="tab-btn" data-tab="search"><span class="tab-icon">🔍</span> <span data-i18n="tabSearch">Search</span></button>
-    <button class="tab-btn" data-tab="bundles"><span class="tab-icon">📦</span> <span data-i18n="tabBundles">Bundles</span></button>
-    <button class="tab-btn" data-tab="wishlist"><span class="tab-icon">♡</span> <span data-i18n="tabWishlist">Wishlist</span></button>
-    <button class="tab-btn" data-tab="settings"><span class="tab-icon">⚙</span> <span data-i18n="tabSettings">Settings</span></button>
+    <button class="tab-btn active" data-tab="dashboard"><span class="tab-icon">📊</span> <span class="tab-label" data-i18n="tabDashboard">Dashboard</span></button>
+    <button class="tab-btn" data-tab="detected" id="detectedTabBtn"><span class="tab-icon">🎯</span> <span class="tab-label" data-i18n="tabDetected">Detected</span></button>
+    <button class="tab-btn" data-tab="search"><span class="tab-icon">🔍</span> <span class="tab-label" data-i18n="tabSearch">Search</span></button>
+    <button class="tab-btn" data-tab="bundles"><span class="tab-icon">📦</span> <span class="tab-label" data-i18n="tabBundles">Bundles</span></button>
+    <button class="tab-btn" data-tab="wishlist"><span class="tab-icon">♡</span> <span class="tab-label" data-i18n="tabWishlist">Wishlist</span></button>
+    <button class="tab-btn" data-tab="settings"><span class="tab-icon">⚙</span> <span class="tab-label" data-i18n="tabSettings">Settings</span></button>
   </div>
   <div class="api-status-bar" id="apiStatusBar">
     <span class="rate-limit" id="rateLimit"></span>
@@ -198,6 +214,8 @@
         <div class="maintenance-actions">
           <button class="btn-sm btn-outline" id="clearCacheBtn" data-i18n="clearCache">Clear Cache</button>
           <button class="btn-sm btn-danger" id="clearHistoryBtn" data-i18n="clearHistory">Clear History</button>
+          <button type="button" class="btn-sm btn-outline" id="viewChangelogBtn" data-i18n="viewChangelog">View changelog</button>
+          <button type="button" class="btn-sm btn-outline" id="replayOnboardingBtn" data-i18n="onboardingReplay">Show welcome tour</button>
         </div>
       </div>
       <div class="settings-group support-card">

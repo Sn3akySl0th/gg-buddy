@@ -48,7 +48,7 @@
   "settingsMaintenance": { "message": "Vedligeholdelse" },
   "clearCache": { "message": "Ryd cache" },
   "clearHistory": { "message": "Ryd historik" },
-  "supportTitle": { "message": "Støt udvikleren" },
+  "viewChangelog": { "message": "Vis ændringslog" },  "supportTitle": { "message": "Støt udvikleren" },
   "supportDescription": { "message": "GG Buddy er gratis og open source. Hvis det hjalp dig med at spare penge på et spil, så overvej at købe mig en kop kaffe!" },
   "supportButton": { "message": "Køb mig en kaffe" },
   "footerPoweredBy": { "message": "Drevet af" },
@@ -195,5 +195,29 @@
   "errorRequestTimedOut": { "message": "Anmodningen udløb" },
   "overlayBest": { "message": "Bedste: $price$", "placeholders": { "price": { "content": "$1" } } },
   "overlayHistoricalLow": { "message": "Historisk lavpunkt" },
-  "overlayViewOnGgDeals": { "message": "Vis på GG.deals →" }
+  "overlayViewOnGgDeals": { "message": "Vis på GG.deals →" },
+
+  "onboardingSkip": { "message": "Spring rundvisning over" },
+  "onboardingBack": { "message": "Tilbage" },
+  "onboardingNext": { "message": "Næste" },
+  "onboardingDone": { "message": "Kom i gang" },
+  "onboardingReplay": { "message": "Vis velkomstrundvisning" },
+  "onboardingReplayStarted": { "message": "Velkomstrundvisning startet" },
+  "onboardingStep": {
+    "message": "Trin $current$ af $total$",
+    "placeholders": {
+      "current": { "content": "$1" },
+      "total": { "content": "$2" }
+    }
+  },
+  "onboardingWelcomeTitle": { "message": "Velkommen til GG Buddy" },
+  "onboardingWelcomeBody": { "message": "GG Buddy finder PC-spilpriser via GG.deals-API’en. Åbn denne popup på en understøttet butiksside for at se registrerede spil, eller udforsk fanerne herunder — denne korte rundvisning viser det vigtigste." },
+  "onboardingStoresTitle": { "message": "Gennemse understøttede butikker" },
+  "onboardingStoresBody": { "message": "Besøg Steam, Epic, GOG, Humble og mange flere (fuld liste i readme). Udvidelsen scanner den aktive fane: se mærket i headeren og åbn fanen Registreret. En prislinje kan vises nederst på siden, når overlay er slået til under Indstillinger." },
+  "onboardingHubTitle": { "message": "Dashboard og Søgning" },
+  "onboardingHubBody": { "message": "Dashboard-fanen opsummerer tilbud for dine spil. Brug Søgning til titel eller Steam App ID og vælg valuta. Tilbudsscore og små grafer hjælper med at vurdere prisen mod historikken." },
+  "onboardingWishlistTitle": { "message": "Ønskeliste og advarsler" },
+  "onboardingWishlistBody": { "message": "Tilføj spil fra butikssider eller søgeresultater. Angiv en målpris og slå notifikationer til under Indstillinger for Chrome-advarsler, når prisen falder. Du kan eksportere listen eller gemme som JSON." },
+  "onboardingPrefsTitle": { "message": "Gør det til dit" },
+  "onboardingPrefsBody": { "message": "Under Indstillinger: tema og accentfarve, slå pris-overlay på siden til eller fra, og «Kun officielle butikker» for at skjule keyshops i popup, overlay og ønskeliste-alarm. Start rundvisningen igen under Vedligehold → Vis velkomstrundvisning." }
 }

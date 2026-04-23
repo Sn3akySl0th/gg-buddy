@@ -48,7 +48,7 @@
   "settingsMaintenance": { "message": "Обслуговування" },
   "clearCache": { "message": "Очистити кеш" },
   "clearHistory": { "message": "Очистити історію" },
-  "supportTitle": { "message": "Підтримати розробника" },
+  "viewChangelog": { "message": "Переглянути список змін" },  "supportTitle": { "message": "Підтримати розробника" },
   "supportDescription": { "message": "GG Buddy — безкоштовний і з відкритим кодом. Якщо він допоміг вам заощадити на крутій грі, подаруйте мені каву!" },
   "supportButton": { "message": "Купити мені каву" },
   "footerPoweredBy": { "message": "Працює на" },
@@ -195,5 +195,29 @@
   "errorRequestTimedOut": { "message": "Час запиту вичерпано" },
   "overlayBest": { "message": "Найкраща: $price$", "placeholders": { "price": { "content": "$1" } } },
   "overlayHistoricalLow": { "message": "Історичний мінімум" },
-  "overlayViewOnGgDeals": { "message": "Переглянути на GG.deals →" }
+  "overlayViewOnGgDeals": { "message": "Переглянути на GG.deals →" },
+
+  "onboardingSkip": { "message": "Пропустити тур" },
+  "onboardingBack": { "message": "Назад" },
+  "onboardingNext": { "message": "Далі" },
+  "onboardingDone": { "message": "Почати" },
+  "onboardingReplay": { "message": "Показати вітальний тур" },
+  "onboardingReplayStarted": { "message": "Вітальний тур запущено" },
+  "onboardingStep": {
+    "message": "Крок $current$ з $total$",
+    "placeholders": {
+      "current": { "content": "$1" },
+      "total": { "content": "$2" }
+    }
+  },
+  "onboardingWelcomeTitle": { "message": "Ласкаво просимо до GG Buddy" },
+  "onboardingWelcomeBody": { "message": "GG Buddy знаходить ціни на ПК-ігри через API GG.deals. Відкрийте це вікно на сторінці підтримуваного магазину, щоб побачити знайдені ігри, або перегляньте вкладки нижче — цей короткий тур покаже головне." },
+  "onboardingStoresTitle": { "message": "Підтримувані магазини" },
+  "onboardingStoresBody": { "message": "Відвідайте Steam, Epic, GOG, Humble та інші (повний список у readme). Розширення сканує активну вкладку: дивіться значок у шапці та відкрийте вкладку «Виявлено». Смуга з ціною може з’явитися внизу сторінки, якщо накладення увімкнено в Налаштуваннях." },
+  "onboardingHubTitle": { "message": "Панель і Пошук" },
+  "onboardingHubBody": { "message": "Вкладка «Панель» підсумовує пропозиції для ваших ігор. У «Пошуку» введіть назву або Steam App ID і виберіть валюту. Оцінка угоди та міні-графіки допомагають порівняти ціну з історією." },
+  "onboardingWishlistTitle": { "message": "Список бажань і сповіщення" },
+  "onboardingWishlistBody": { "message": "Додавайте ігри зі сторінок магазинів або з результатів пошуку. Встановіть цільову ціну та увімкніть сповіщення в Налаштуваннях для оповіщень Chrome при зниженні ціни. Можна експортувати список або зберегти JSON." },
+  "onboardingPrefsTitle": { "message": "Налаштуйте під себе" },
+  "onboardingPrefsBody": { "message": "У Налаштуваннях: тема й колір акценту, накладення цін на сторінці та «Лише офіційні магазини», щоб приховати кейшопи у спливаючому вікні, накладенні й сповіщеннях списку. Повторити тур: Обслуговування → Показати вітальний тур." }
 }

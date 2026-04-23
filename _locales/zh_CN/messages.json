@@ -48,7 +48,7 @@
   "settingsMaintenance": { "message": "维护" },
   "clearCache": { "message": "清除缓存" },
   "clearHistory": { "message": "清除历史" },
-  "supportTitle": { "message": "支持开发者" },
+  "viewChangelog": { "message": "查看更新日志" },  "supportTitle": { "message": "支持开发者" },
   "supportDescription": { "message": "GG Buddy是免费的开源软件。如果它帮您在大作上省了钱，请考虑请我喝杯咖啡！" },
   "supportButton": { "message": "请我喝咖啡" },
   "footerPoweredBy": { "message": "技术支持" },
@@ -195,5 +195,29 @@
   "errorRequestTimedOut": { "message": "请求超时" },
   "overlayBest": { "message": "最低: $price$", "placeholders": { "price": { "content": "$1" } } },
   "overlayHistoricalLow": { "message": "历史最低价" },
-  "overlayViewOnGgDeals": { "message": "在GG.deals查看 →" }
+  "overlayViewOnGgDeals": { "message": "在GG.deals查看 →" },
+
+  "onboardingSkip": { "message": "跳过导览" },
+  "onboardingBack": { "message": "返回" },
+  "onboardingNext": { "message": "下一步" },
+  "onboardingDone": { "message": "开始使用" },
+  "onboardingReplay": { "message": "显示欢迎导览" },
+  "onboardingReplayStarted": { "message": "欢迎导览已开始" },
+  "onboardingStep": {
+    "message": "第 $current$ 步，共 $total$ 步",
+    "placeholders": {
+      "current": { "content": "$1" },
+      "total": { "content": "$2" }
+    }
+  },
+  "onboardingWelcomeTitle": { "message": "欢迎使用 GG Buddy" },
+  "onboardingWelcomeBody": { "message": "GG Buddy 通过 GG.deals API 查询 PC 游戏价格。在支持的商店页面打开本弹窗可查看检测到的游戏，也可浏览下方标签页。本简短导览将介绍主要功能。" },
+  "onboardingStoresTitle": { "message": "浏览支持的商店" },
+  "onboardingStoresBody": { "message": "支持 Steam、Epic、GOG、Humble 等多家商店（完整列表见 readme）。扩展会扫描当前标签页：留意标题栏角标并打开「已检测」标签。若在设置中开启价格浮层，页面底部可能显示价格条。" },
+  "onboardingHubTitle": { "message": "仪表盘与搜索" },
+  "onboardingHubBody": { "message": "「仪表盘」汇总您关注游戏的优惠。使用「搜索」按名称或 Steam 应用 ID 查找并选择货币。优惠评分与迷你走势图帮助对比历史价格。" },
+  "onboardingWishlistTitle": { "message": "愿望单与提醒" },
+  "onboardingWishlistBody": { "message": "可从商店页或搜索结果添加游戏。设置目标价并在设置中启用通知，降价时将通过 Chrome 提醒。可导出列表或备份为 JSON。" },
+  "onboardingPrefsTitle": { "message": "个性化设置" },
+  "onboardingPrefsBody": { "message": "在设置中可选择主题与强调色、开关页面价格浮层，以及「仅官方商店」以在弹窗、浮层和愿望单提醒中隐藏灰色市场密钥店。可随时在「维护 → 显示欢迎导览」再次播放本导览。" }
 }

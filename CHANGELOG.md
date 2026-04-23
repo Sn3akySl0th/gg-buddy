@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.6.0] - 2026-04-22
+
+### Added
+
+- **Historical-Low Price Alerts** — Wishlist "Alert below" now auto-fills with the game's historical low (retail-only when Official Stores Only is enabled, otherwise the lowest of retail/keyshop) in the currency of your selected region, and fires when the current best price is _at or below_ that threshold.
+- **Alert Currency Safety** — Custom alert thresholds now show a mismatch warning and auto-convert when your selected region/currency changes.
+- **Custom Game Images** — You can set or reset a custom image per game from wishlist details, and that override is used consistently across all card views that render that game image.
+- **Bundles Filters & Sorting** — The Active Bundles tab now supports filtering by store (e.g., Fanatical, Humble) and sorting by ending soon, price (low/high), or title.
+- **Wishlist Bundle Callout** — Expanded wishlist details now show a bundle callout that checks active bundles for the game and flags when a bundle tier is cheaper than the game's current best standalone price.
+- **Settings Changelog Button** — Added a Maintenance action to open and view `CHANGELOG.md` directly from the extension.
+
+### Changed
+
+- **Popup Tab Stability** — Improved tab bar behavior on constrained popup widths to avoid clipping/flicker while preserving icon+label mode whenever it fits.
+
+---
+
 ## [2.5.0]
 
 ### Added
@@ -56,6 +73,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Themes (Light/Dark/OLED/System), accent colors, compact mode.
 - Cross-device sync via Chrome storage.
 
+[2.6.0]: https://github.com/ggbuddy/GameDealFinder/compare/v2.5.0...v2.6.0
+[2.5.0]: https://github.com/ggbuddy/GameDealFinder/compare/v2.3.0...v2.5.0
 [2.3.0]: https://github.com/ggbuddy/GameDealFinder/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/ggbuddy/GameDealFinder/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/ggbuddy/GameDealFinder/releases/tag/v2.1.0

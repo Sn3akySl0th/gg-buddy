@@ -58,7 +58,7 @@
   "settingsMaintenance": { "message": "Manutenzione" },
   "clearCache": { "message": "Svuota cache" },
   "clearHistory": { "message": "Cancella cronologia" },
-
+  "viewChangelog": { "message": "Visualizza changelog" },
   "supportTitle": { "message": "Supporta lo sviluppatore" },
   "supportDescription": { "message": "GG Buddy è gratuito e open-source. Se ti ha aiutato a risparmiare su un grande gioco, considera di offrirmi un caffè!" },
   "supportButton": { "message": "Offrimi un caffè" },
@@ -230,5 +230,29 @@
 
   "overlayBest": { "message": "Migliore: $price$", "placeholders": { "price": { "content": "$1" } } },
   "overlayHistoricalLow": { "message": "Minimo storico" },
-  "overlayViewOnGgDeals": { "message": "Vedi su GG.deals →" }
+  "overlayViewOnGgDeals": { "message": "Vedi su GG.deals →" },
+
+  "onboardingSkip": { "message": "Salta tour" },
+  "onboardingBack": { "message": "Indietro" },
+  "onboardingNext": { "message": "Avanti" },
+  "onboardingDone": { "message": "Inizia" },
+  "onboardingReplay": { "message": "Mostra tour di benvenuto" },
+  "onboardingReplayStarted": { "message": "Tour di benvenuto avviato" },
+  "onboardingStep": {
+    "message": "Passaggio $current$ di $total$",
+    "placeholders": {
+      "current": { "content": "$1" },
+      "total": { "content": "$2" }
+    }
+  },
+  "onboardingWelcomeTitle": { "message": "Benvenuto in GG Buddy" },
+  "onboardingWelcomeBody": { "message": "GG Buddy trova i prezzi dei giochi PC tramite l’API GG.deals. Apri questo popup in una pagina store supportata per vedere i giochi rilevati, oppure esplora le schede qui sotto — questo breve tour mostra l’essenziale." },
+  "onboardingStoresTitle": { "message": "Sfoglia gli store supportati" },
+  "onboardingStoresBody": { "message": "Visita Steam, Epic, GOG, Humble e molti altri (elenco completo nel readme). L’estensione analizza la scheda attiva: controlla il badge nell’intestazione e apri la scheda Rilevati. Una barra dei prezzi può apparire in basso quando l’overlay è attivo nelle Impostazioni." },
+  "onboardingHubTitle": { "message": "Dashboard e Ricerca" },
+  "onboardingHubBody": { "message": "La scheda Dashboard riassume le offerte per i tuoi giochi. Usa Ricerca per titolo o Steam App ID e scegli la valuta. Punteggio offerta e sparkline aiutano a capire se il prezzo è conveniente rispetto alla storia." },
+  "onboardingWishlistTitle": { "message": "Lista desideri e avvisi" },
+  "onboardingWishlistBody": { "message": "Aggiungi giochi dalla pagina store o dai risultati di ricerca. Imposta un prezzo obiettivo e attiva le notifiche nelle Impostazioni per ricevere avvisi Chrome quando scende il prezzo. Puoi esportare la lista o salvarla come JSON." },
+  "onboardingPrefsTitle": { "message": "Personalizza" },
+  "onboardingPrefsBody": { "message": "Nelle Impostazioni: tema e colore accento, attiva o disattiva l’overlay prezzi sulla pagina e «Solo store ufficiali» per nascondere i keyshop nel popup, nell’overlay e negli avvisi della lista. Puoi ripetere il tour da Manutenzione → Mostra tour di benvenuto." }
 }

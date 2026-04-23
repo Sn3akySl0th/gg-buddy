@@ -48,7 +48,7 @@
   "settingsMaintenance": { "message": "Manutenção" },
   "clearCache": { "message": "Limpar cache" },
   "clearHistory": { "message": "Limpar histórico" },
-  "supportTitle": { "message": "Apoie o desenvolvedor" },
+  "viewChangelog": { "message": "Ver registro de alterações" },  "supportTitle": { "message": "Apoie o desenvolvedor" },
   "supportDescription": { "message": "GG Buddy é gratuito e de código aberto. Se ajudou você a economizar em um jogo, considere me pagar um café!" },
   "supportButton": { "message": "Me pague um café" },
   "footerPoweredBy": { "message": "Desenvolvido por" },
@@ -195,5 +195,29 @@
   "errorRequestTimedOut": { "message": "A solicitação expirou" },
   "overlayBest": { "message": "Melhor: $price$", "placeholders": { "price": { "content": "$1" } } },
   "overlayHistoricalLow": { "message": "Mínima histórica" },
-  "overlayViewOnGgDeals": { "message": "Ver no GG.deals →" }
+  "overlayViewOnGgDeals": { "message": "Ver no GG.deals →" },
+
+  "onboardingSkip": { "message": "Pular tour" },
+  "onboardingBack": { "message": "Voltar" },
+  "onboardingNext": { "message": "Avançar" },
+  "onboardingDone": { "message": "Começar" },
+  "onboardingReplay": { "message": "Mostrar tour de boas-vindas" },
+  "onboardingReplayStarted": { "message": "Tour de boas-vindas iniciado" },
+  "onboardingStep": {
+    "message": "Passo $current$ de $total$",
+    "placeholders": {
+      "current": { "content": "$1" },
+      "total": { "content": "$2" }
+    }
+  },
+  "onboardingWelcomeTitle": { "message": "Bem-vindo ao GG Buddy" },
+  "onboardingWelcomeBody": { "message": "O GG Buddy encontra preços de jogos para PC pela API GG.deals. Abra este pop-up em uma loja compatível para ver jogos detectados ou explore as abas abaixo — este tour rápido mostra o essencial." },
+  "onboardingStoresTitle": { "message": "Navegue em lojas compatíveis" },
+  "onboardingStoresBody": { "message": "Visite Steam, Epic, GOG, Humble e outras (lista completa no readme). A extensão analisa a aba ativa: veja o selo no cabeçalho e abra a aba Detectados. Uma barra de preços pode aparecer no rodapé da página quando a sobreposição está ativada em Configurações." },
+  "onboardingHubTitle": { "message": "Painel e Busca" },
+  "onboardingHubBody": { "message": "A aba Painel resume ofertas dos seus jogos. Use Busca por título ou Steam App ID e escolha a moeda. Pontuação de oferta e sparklines ajudam a comparar o preço com o histórico." },
+  "onboardingWishlistTitle": { "message": "Lista de desejos e alertas" },
+  "onboardingWishlistBody": { "message": "Adicione jogos nas páginas das lojas ou nos resultados de busca. Defina um preço alvo e ative notificações em Configurações para alertas do Chrome quando o preço cair. Você pode exportar a lista ou salvar em JSON." },
+  "onboardingPrefsTitle": { "message": "Do seu jeito" },
+  "onboardingPrefsBody": { "message": "Em Configurações: tema e cor de destaque, ative ou desative a sobreposição de preços na página e «Somente lojas oficiais» para ocultar keyshops no pop-up, na sobreposição e nos alertas da lista. Repita o tour em Manutenção → Mostrar tour de boas-vindas." }
 }

@@ -22,6 +22,12 @@ Never overpay for a game again. GG Buddy automatically detects games on store pa
 
 📦 Dynamic Bundle Savings — Discover active bundles containing games you're looking at, complete with an automatic calculation of your exact percentage savings compared to individual purchases.
 
+🧠 Bundle Intelligence for Wishlist — In wishlist details, GG Buddy now flags when a game is available in an active bundle and highlights whether the cheapest bundle tier beats the standalone price, including how much you save.
+
+🎛️ Bundle Store Filters & Sorting — In the Active Bundles tab, quickly filter by store (e.g., Fanatical, Humble) and sort by ending soon, price low/high, or title.
+
+🖼️ Custom Game Covers — Missing artwork? Set a custom game image from wishlist details and GG Buddy uses it across views.
+
 🎨 Full Customization — • 4 beautifully responsive themes: Light, Dark, OLED Black, and System Auto • 7 distinct accent colors • Compact mode for dense lists • Export/Import your wishlist as a JSON backup
 
 ☁️ Cross-Device Sync — Your wishlist and user settings sync flawlessly across all of your active Chrome installs.

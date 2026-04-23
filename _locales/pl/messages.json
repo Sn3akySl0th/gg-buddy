@@ -48,7 +48,7 @@
   "settingsMaintenance": { "message": "Konserwacja" },
   "clearCache": { "message": "Wyczyść pamięć podręczną" },
   "clearHistory": { "message": "Wyczyść historię" },
-  "supportTitle": { "message": "Wesprzyj dewelopera" },
+  "viewChangelog": { "message": "Pokaż dziennik zmian" },  "supportTitle": { "message": "Wesprzyj dewelopera" },
   "supportDescription": { "message": "GG Buddy jest darmowy i open-source. Jeśli pomógł Ci zaoszczędzić pieniądze na grze, postaw mi kawę!" },
   "supportButton": { "message": "Postaw mi kawę" },
   "footerPoweredBy": { "message": "Napędzane przez" },
@@ -195,5 +195,29 @@
   "errorRequestTimedOut": { "message": "Upłynął limit czasu żądania" },
   "overlayBest": { "message": "Najlepsza: $price$", "placeholders": { "price": { "content": "$1" } } },
   "overlayHistoricalLow": { "message": "Historyczne minimum" },
-  "overlayViewOnGgDeals": { "message": "Zobacz na GG.deals →" }
+  "overlayViewOnGgDeals": { "message": "Zobacz na GG.deals →" },
+
+  "onboardingSkip": { "message": "Pomiń przewodnik" },
+  "onboardingBack": { "message": "Wstecz" },
+  "onboardingNext": { "message": "Dalej" },
+  "onboardingDone": { "message": "Zaczynamy" },
+  "onboardingReplay": { "message": "Pokaż przewodnik powitalny" },
+  "onboardingReplayStarted": { "message": "Uruchomiono przewodnik powitalny" },
+  "onboardingStep": {
+    "message": "Krok $current$ z $total$",
+    "placeholders": {
+      "current": { "content": "$1" },
+      "total": { "content": "$2" }
+    }
+  },
+  "onboardingWelcomeTitle": { "message": "Witaj w GG Buddy" },
+  "onboardingWelcomeBody": { "message": "GG Buddy wyszukuje ceny gier PC przez API GG.deals. Otwórz to okno na obsługiwanej stronie sklepu, aby zobaczyć wykryte gry, lub przejrzyj karty poniżej — ten krótki przewodnik pokazuje najważniejsze funkcje." },
+  "onboardingStoresTitle": { "message": "Obsługiwane sklepy" },
+  "onboardingStoresBody": { "message": "Odwiedź Steam, Epic, GOG, Humble i wiele innych (pełna lista w readme). Rozszerzenie skanuje aktywną kartę: sprawdź znaczek w nagłówku i otwórz kartę Wykryto. Pasek cen może pojawić się na dole strony, gdy nakładka jest włączona w Ustawieniach." },
+  "onboardingHubTitle": { "message": "Panel i wyszukiwanie" },
+  "onboardingHubBody": { "message": "Karta Panel podsumowuje okazje dla Twoich gier. Wyszukiwanie: tytuł lub Steam App ID oraz waluta. Wynik okazji i wykresy pomagają ocenić cenę względem historii." },
+  "onboardingWishlistTitle": { "message": "Lista życzeń i alerty" },
+  "onboardingWishlistBody": { "message": "Dodawaj gry ze stron sklepów lub z wyników wyszukiwania. Ustaw docelową cenę i włącz powiadomienia w Ustawieniach, aby otrzymywać alerty Chrome przy obniżce. Możesz eksportować listę lub zapisać ją jako JSON." },
+  "onboardingPrefsTitle": { "message": "Dostosuj do siebie" },
+  "onboardingPrefsBody": { "message": "W Ustawieniach: motyw i kolor akcentu, włącz lub wyłącz nakładkę cen na stronie oraz „Tylko oficjalne sklepy”, aby ukryć keyshopy w oknie, nakładce i alertach listy. Przewodnik możesz powtórzyć w Konserwacja → Pokaż przewodnik powitalny." }
 }

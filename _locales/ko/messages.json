@@ -48,7 +48,7 @@
   "settingsMaintenance": { "message": "유지보수" },
   "clearCache": { "message": "캐시 삭제" },
   "clearHistory": { "message": "기록 삭제" },
-  "supportTitle": { "message": "개발자 후원" },
+  "viewChangelog": { "message": "변경 로그 보기" },  "supportTitle": { "message": "개발자 후원" },
   "supportDescription": { "message": "GG Buddy는 무료 오픈소스입니다. 게임 구매 시 절약에 도움이 되었다면 커피 한 잔 사주세요!" },
   "supportButton": { "message": "커피 사주기" },
   "footerPoweredBy": { "message": "Powered by" },
@@ -195,5 +195,29 @@
   "errorRequestTimedOut": { "message": "요청 시간 초과" },
   "overlayBest": { "message": "최저가: $price$", "placeholders": { "price": { "content": "$1" } } },
   "overlayHistoricalLow": { "message": "역대 최저가" },
-  "overlayViewOnGgDeals": { "message": "GG.deals에서 보기 →" }
+  "overlayViewOnGgDeals": { "message": "GG.deals에서 보기 →" },
+
+  "onboardingSkip": { "message": "둘러보기 건너뛰기" },
+  "onboardingBack": { "message": "뒤로" },
+  "onboardingNext": { "message": "다음" },
+  "onboardingDone": { "message": "시작하기" },
+  "onboardingReplay": { "message": "환영 둘러보기 표시" },
+  "onboardingReplayStarted": { "message": "환영 둘러보기를 시작했습니다" },
+  "onboardingStep": {
+    "message": "$total$단계 중 $current$단계",
+    "placeholders": {
+      "current": { "content": "$1" },
+      "total": { "content": "$2" }
+    }
+  },
+  "onboardingWelcomeTitle": { "message": "GG Buddy에 오신 것을 환영합니다" },
+  "onboardingWelcomeBody": { "message": "GG Buddy는 GG.deals API로 PC 게임 가격을 찾습니다. 지원되는 스토어 페이지에서 이 팝업을 열면 감지된 게임을 볼 수 있고, 아래 탭을 둘러보세요. 이 짧은 둘러보기에서 핵심 기능을 안내합니다." },
+  "onboardingStoresTitle": { "message": "지원 스토어 둘러보기" },
+  "onboardingStoresBody": { "message": "Steam, Epic, GOG, Humble 등 여러 상점을 지원합니다(전체 목록은 readme 참고). 확장 프로그램이 활성 탭을 검사합니다. 헤더의 배지를 확인하고 감지됨 탭을 여세요. 설정에서 오버레이를 켜면 페이지 하단에 가격 표시줄이 나타날 수 있습니다." },
+  "onboardingHubTitle": { "message": "대시보드 및 검색" },
+  "onboardingHubBody": { "message": "대시보드 탭에서 관심 게임의 할인 정보를 한눈에 봅니다. 검색으로 제목이나 Steam 앱 ID를 찾고 통화를 선택하세요. 딜 점수와 스파크라인으로 과거 대비 가격을 판단하는 데 도움이 됩니다." },
+  "onboardingWishlistTitle": { "message": "위시리스트 및 알림" },
+  "onboardingWishlistBody": { "message": "스토어 페이지나 검색 결과에서 게임을 추가하세요. 목표 가격을 설정하고 설정에서 알림을 켜면 가격이 떨어질 때 Chrome 알림을 받습니다. 목록을 공유하거나 JSON으로 백업할 수 있습니다." },
+  "onboardingPrefsTitle": { "message": "내게 맞게 설정" },
+  "onboardingPrefsBody": { "message": "설정에서 테마와 강조 색, 페이지 가격 오버레이 켜기/끄기, 「공식 스토어만」으로 키샵을 팝업·오버레이·위시리스트 알림에서 숨길 수 있습니다. 유지 관리 → 환영 둘러보기 표시에서 언제든 다시 시작할 수 있습니다." }
 }

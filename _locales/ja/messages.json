@@ -48,7 +48,7 @@
   "settingsMaintenance": { "message": "メンテナンス" },
   "clearCache": { "message": "キャッシュをクリア" },
   "clearHistory": { "message": "履歴をクリア" },
-  "supportTitle": { "message": "開発者を支援" },
+  "viewChangelog": { "message": "変更履歴を表示" },  "supportTitle": { "message": "開発者を支援" },
   "supportDescription": { "message": "GG Buddyは無料のオープンソースです。ゲームの節約に役立ったなら、コーヒーをおごってください！" },
   "supportButton": { "message": "コーヒーをおごる" },
   "footerPoweredBy": { "message": "Powered by" },
@@ -195,5 +195,29 @@
   "errorRequestTimedOut": { "message": "リクエストがタイムアウトしました" },
   "overlayBest": { "message": "最安: $price$", "placeholders": { "price": { "content": "$1" } } },
   "overlayHistoricalLow": { "message": "過去最安値" },
-  "overlayViewOnGgDeals": { "message": "GG.dealsで見る →" }
+  "overlayViewOnGgDeals": { "message": "GG.dealsで見る →" },
+
+  "onboardingSkip": { "message": "ツアーをスキップ" },
+  "onboardingBack": { "message": "戻る" },
+  "onboardingNext": { "message": "次へ" },
+  "onboardingDone": { "message": "はじめる" },
+  "onboardingReplay": { "message": "ウェルカムツアーを表示" },
+  "onboardingReplayStarted": { "message": "ウェルカムツアーを開始しました" },
+  "onboardingStep": {
+    "message": "ステップ $current$ / $total$",
+    "placeholders": {
+      "current": { "content": "$1" },
+      "total": { "content": "$2" }
+    }
+  },
+  "onboardingWelcomeTitle": { "message": "GG Buddy へようこそ" },
+  "onboardingWelcomeBody": { "message": "GG Buddy は GG.deals API で PC ゲームの価格を調べます。対応ストアのページでこのポップアップを開くと検出されたゲームが表示されます。下のタブもご利用ください。この短いツアーで要点をご案内します。" },
+  "onboardingStoresTitle": { "message": "対応ストアを見る" },
+  "onboardingStoresBody": { "message": "Steam、Epic、GOG、Humble など多数のストアに対応しています（一覧は readme を参照）。拡張機能はアクティブなタブをスキャンします。ヘッダーのバッジを確認し、「検出」タブを開いてください。設定でオーバーレイを有効にすると、ページ下部に価格バーが表示されることがあります。" },
+  "onboardingHubTitle": { "message": "ダッシュボードと検索" },
+  "onboardingHubBody": { "message": "ダッシュボードでは気になるゲームのお得情報をまとめて確認できます。検索ではタイトルや Steam アプリ ID を入力し通貨を選べます。ディールスコアとスパークラインで価格の良さを履歴と比較できます。" },
+  "onboardingWishlistTitle": { "message": "ウィッシュリストと通知" },
+  "onboardingWishlistBody": { "message": "ストアページや検索結果からゲームを追加できます。目標価格を設定し、設定で通知をオンにすると、価格が下がったときに Chrome で通知されます。リストのエクスポートや JSON バックアップも可能です。" },
+  "onboardingPrefsTitle": { "message": "自分好みに設定" },
+  "onboardingPrefsBody": { "message": "設定ではテーマとアクセントカラー、ページ上の価格オーバーレイのオン/オフ、「公式ストアのみ」でキーショップをポップアップ・オーバーレイ・ウィッシュリスト通知から非表示にできます。メンテナンス → ウェルカムツアーを表示 からいつでも再開できます。" }
 }

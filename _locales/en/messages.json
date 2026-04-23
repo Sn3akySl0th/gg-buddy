@@ -58,7 +58,7 @@
   "settingsMaintenance": { "message": "Maintenance" },
   "clearCache": { "message": "Clear Cache" },
   "clearHistory": { "message": "Clear History" },
-
+  "viewChangelog": { "message": "View changelog" },
   "supportTitle": { "message": "Support the Developer" },
   "supportDescription": { "message": "GG Buddy is free and open-source. If it helped you save some money on a big game, consider buying me a coffee!" },
   "supportButton": { "message": "Buy me a coffee" },
@@ -379,5 +379,29 @@
   },
   "overlaySupportDevs": { "message": "Support developers — get a deal:" },
   "overlayHistoricalLow": { "message": "Historical Low" },
-  "overlayViewOnGgDeals": { "message": "View on GG.deals →" }
+  "overlayViewOnGgDeals": { "message": "View on GG.deals →" },
+
+  "onboardingSkip": { "message": "Skip tour" },
+  "onboardingBack": { "message": "Back" },
+  "onboardingNext": { "message": "Next" },
+  "onboardingDone": { "message": "Get started" },
+  "onboardingReplay": { "message": "Show welcome tour" },
+  "onboardingReplayStarted": { "message": "Welcome tour started" },
+  "onboardingStep": {
+    "message": "Step $current$ of $total$",
+    "placeholders": {
+      "current": { "content": "$1" },
+      "total": { "content": "$2" }
+    }
+  },
+  "onboardingWelcomeTitle": { "message": "Welcome to GG Buddy" },
+  "onboardingWelcomeBody": { "message": "GG Buddy finds PC game prices through the GG.deals API. Open this popup on a supported store page to see detected games, or explore the tabs below — this short tour shows you the essentials." },
+  "onboardingStoresTitle": { "message": "Browse supported stores" },
+  "onboardingStoresBody": { "message": "Visit Steam, Epic, GOG, Humble, and many other shops (see the readme for the full list). The extension scans the active tab: check the badge in the header and open the Detected tab for matches. A price bar can appear at the bottom of the page when the overlay is enabled in Settings." },
+  "onboardingHubTitle": { "message": "Dashboard & Search" },
+  "onboardingHubBody": { "message": "The Dashboard tab summarizes deals for games you care about. Use Search to look up any title or Steam App ID and pick a currency. Deal scores and sparklines help you judge how good a price is versus history." },
+  "onboardingWishlistTitle": { "message": "Wishlist & alerts" },
+  "onboardingWishlistBody": { "message": "Add games to your wishlist from store pages or search results. Set a target price and enable notifications in Settings to get Chrome alerts when the price drops. You can export your list to share or back it up as JSON." },
+  "onboardingPrefsTitle": { "message": "Make it yours" },
+  "onboardingPrefsBody": { "message": "In Settings: choose theme and accent, turn the on-page price overlay on or off, and use Official Stores Only to hide grey-market keyshops in the popup, overlay, and wishlist alerts. You can replay this tour anytime from Maintenance → Show welcome tour." }
 }

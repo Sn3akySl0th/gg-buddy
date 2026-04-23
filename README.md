@@ -3,7 +3,7 @@
 A Chrome extension that automatically compares PC game prices across 17+ stores using [GG.deals](https://gg.deals). Never overpay for a game again.
 
 ![Chrome Web Store](https://img.shields.io/badge/Chrome-Extension-blue?logo=googlechrome&logoColor=white)
-![Version](https://img.shields.io/badge/version-2.5.0-green)
+![Version](https://img.shields.io/badge/version-2.6.0-green)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
 ## Chrome Web Store listing
@@ -23,6 +23,12 @@ Copy the full store description from [`chrome-store-description.txt`](chrome-sto
 💜 **Wishlist & Alerts** — Track games and get notified when prices drop below your target. Export your list to the clipboard
 
 📦 **Bundle Finder & Calculator** — Discover active bundles and instantly see your exact percentage savings vs buying individually
+
+🎛️ **Bundle Filters & Sorting** — Filter active bundles by store and sort by ending soon, price, or title
+
+🧠 **Wishlist Bundle Callouts** — Wishlisted games now show whether an active bundle tier is worth considering vs standalone price
+
+🖼️ **Custom Game Images** — Set or reset game artwork overrides from wishlist details, reused across views
 
 🛡️ **Official Stores Only** — Filters keyshops from the popup (dashboard, search, wishlist, deal scores), the **inline overlay**, and **wishlist price alerts**; comparisons use official retailer pricing only
 

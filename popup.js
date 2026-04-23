@@ -13,6 +13,7 @@ let wishlist = [];
 let priceHistory = {};
 let notificationSettings = { enabled: false };
 let recentSearches = [];
+let imageOverrides = {};
 let syncEnabled = true; // chrome.storage.sync for cross-device
 let userPrefs = {
   theme: 'light',
@@ -44,6 +45,35 @@ function initI18n() {
   });
 }
 initI18n();
+initTabA11yLabels();
+updateTabLayoutMode();
+// Re-check once after fonts settle so width calculation is accurate.
+if (document.fonts?.ready) {
+  document.fonts.ready.then(() => updateTabLayoutMode()).catch(() => {});
+}
+
+function initTabA11yLabels() {
+  document.querySelectorAll('.tab-btn').forEach((btn) => {
+    const labelEl = btn.querySelector('.tab-label');
+    const label = (labelEl?.textContent || '').trim();
+    if (!label) return;
+    btn.setAttribute('aria-label', label);
+    btn.setAttribute('title', label);
+  });
+}
+
+function updateTabLayoutMode() {
+  const tabs = document.querySelector('.tabs');
+  if (!tabs) return;
+  const wasCompact = tabs.classList.contains('compact-tabs');
+  const HYSTERESIS_PX = 6;
+
+  // Measure in full-label mode, then only apply if needed.
+  if (wasCompact) tabs.classList.remove('compact-tabs');
+  const overflowPx = tabs.scrollWidth - tabs.clientWidth;
+  const hasOverflow = overflowPx > HYSTERESIS_PX;
+  if (hasOverflow) tabs.classList.add('compact-tabs');
+}
 
 // ── Utility helpers ──────────────────────────────────────────────────────────
 
@@ -52,6 +82,42 @@ function escapeHtml(t) {
 }
 function escapeAttr(t) {
   return t.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+}
+
+const FX_API_BASE = 'https://api.frankfurter.app';
+const FX_CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
+let fxRateCache = {};
+
+function roundMoney(value) {
+  return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+}
+
+async function getFxRate(fromCurrency, toCurrency) {
+  const from = String(fromCurrency || '').toUpperCase();
+  const to = String(toCurrency || '').toUpperCase();
+  if (!from || !to) throw new Error('Missing currency');
+  if (from === to) return 1;
+
+  const key = `${from}->${to}`;
+  const cached = fxRateCache[key];
+  if (cached && (Date.now() - cached.timestamp) < FX_CACHE_TTL_MS) return cached.rate;
+
+  const url = `${FX_API_BASE}/latest?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`FX API ${resp.status}`);
+  const json = await resp.json();
+  const rate = json?.rates?.[to];
+  if (typeof rate !== 'number' || !isFinite(rate) || rate <= 0) throw new Error('Invalid FX rate');
+
+  fxRateCache[key] = { rate, timestamp: Date.now() };
+  return rate;
+}
+
+async function convertCurrencyAmount(amount, fromCurrency, toCurrency) {
+  const numeric = Number(amount);
+  if (!isFinite(numeric)) throw new Error('Invalid amount');
+  const rate = await getFxRate(fromCurrency, toCurrency);
+  return roundMoney(numeric * rate);
 }
 
 function applyOfficialOnlyToData(data) {
@@ -205,7 +271,7 @@ function savePrefs() {
 
 // Load local data first (fast), then merge synced data on top
 chrome.storage.local.get(
-  ['wishlist', 'priceHistory', 'notificationSettings', 'lastRegion', 'apiKey', 'contextMenuAppId', 'rateLimitInfo', 'recentSearches', 'userPrefs'],
+  ['wishlist', 'priceHistory', 'notificationSettings', 'lastRegion', 'apiKey', 'contextMenuAppId', 'rateLimitInfo', 'recentSearches', 'userPrefs', 'imageOverrides'],
   (localResult) => {
     if (localResult.priceHistory) priceHistory = localResult.priceHistory;
     if (localResult.lastRegion) {
@@ -220,6 +286,7 @@ chrome.storage.local.get(
     if (localResult.recentSearches) recentSearches = localResult.recentSearches;
     if (localResult.userPrefs) userPrefs = { ...userPrefs, ...localResult.userPrefs };
     if (localResult.wishlist) wishlist = localResult.wishlist;
+    if (localResult.imageOverrides && typeof localResult.imageOverrides === 'object') imageOverrides = localResult.imageOverrides;
     if (localResult.notificationSettings) notificationSettings = localResult.notificationSettings;
     if (localResult.apiKey) document.getElementById('apiKeyInput').value = localResult.apiKey;
 
@@ -269,6 +336,7 @@ function finishInit(result) {
     loadDetectedGames();
   }
   loadRecentSearches();
+  maybeStartOnboarding(result);
 }
 
 // Listen for system theme changes
@@ -295,6 +363,111 @@ function switchTab(tab) {
   if (tab === 'bundles') loadActiveBundles();
   if (tab === 'search') loadRecentSearches();
   if (tab === 'dashboard') showDashboard();
+}
+
+// ── First-run onboarding ─────────────────────────────────────────────────────
+
+const ONBOARDING_STEPS = [
+  { title: 'onboardingWelcomeTitle', body: 'onboardingWelcomeBody' },
+  { title: 'onboardingStoresTitle', body: 'onboardingStoresBody' },
+  { title: 'onboardingHubTitle', body: 'onboardingHubBody' },
+  { title: 'onboardingWishlistTitle', body: 'onboardingWishlistBody' },
+  { title: 'onboardingPrefsTitle', body: 'onboardingPrefsBody' },
+];
+
+let onboardingStepIndex = 0;
+let onboardingWired = false;
+let onboardingEscapeHandler = null;
+
+function renderOnboardingStep() {
+  const backdrop = document.getElementById('onboardingBackdrop');
+  const step = ONBOARDING_STEPS[onboardingStepIndex];
+  if (!backdrop || !step) return;
+
+  document.getElementById('onboardingTitle').textContent = t(step.title);
+  document.getElementById('onboardingBody').textContent = t(step.body);
+  document.getElementById('onboardingStepLabel').textContent = t(
+    'onboardingStep',
+    String(onboardingStepIndex + 1),
+    String(ONBOARDING_STEPS.length)
+  );
+
+  document.getElementById('onboardingBack').classList.toggle('hidden', onboardingStepIndex === 0);
+  const nextBtn = document.getElementById('onboardingNext');
+  nextBtn.textContent =
+    onboardingStepIndex >= ONBOARDING_STEPS.length - 1 ? t('onboardingDone') : t('onboardingNext');
+
+  const dots = document.getElementById('onboardingDots');
+  dots.innerHTML = ONBOARDING_STEPS.map(
+    (_, i) => `<span class="onboarding-dot${i === onboardingStepIndex ? ' active' : ''}" role="presentation"></span>`
+  ).join('');
+
+  backdrop.classList.remove('hidden');
+  backdrop.setAttribute('aria-hidden', 'false');
+
+  if (onboardingEscapeHandler) {
+    document.removeEventListener('keydown', onboardingEscapeHandler);
+  }
+  onboardingEscapeHandler = (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closeOnboarding(true);
+    }
+  };
+  document.addEventListener('keydown', onboardingEscapeHandler);
+
+  nextBtn.focus();
+}
+
+function closeOnboarding(markComplete) {
+  const backdrop = document.getElementById('onboardingBackdrop');
+  if (!backdrop) return;
+  if (onboardingEscapeHandler) {
+    document.removeEventListener('keydown', onboardingEscapeHandler);
+    onboardingEscapeHandler = null;
+  }
+  backdrop.classList.add('hidden');
+  backdrop.setAttribute('aria-hidden', 'true');
+  if (markComplete) chrome.storage.local.set({ onboardingComplete: true });
+}
+
+function wireOnboarding() {
+  if (onboardingWired) return;
+  onboardingWired = true;
+  document.getElementById('onboardingSkip').addEventListener('click', () => closeOnboarding(true));
+  document.getElementById('onboardingBack').addEventListener('click', () => {
+    if (onboardingStepIndex > 0) {
+      onboardingStepIndex--;
+      renderOnboardingStep();
+    }
+  });
+  document.getElementById('onboardingNext').addEventListener('click', () => {
+    if (onboardingStepIndex >= ONBOARDING_STEPS.length - 1) {
+      closeOnboarding(true);
+      return;
+    }
+    onboardingStepIndex++;
+    renderOnboardingStep();
+  });
+}
+
+function maybeStartOnboarding(initResult) {
+  if (initResult && initResult.contextMenuAppId) return;
+  wireOnboarding();
+  chrome.storage.local.get(['onboardingComplete'], (r) => {
+    if (chrome.runtime.lastError || r.onboardingComplete === true) return;
+    onboardingStepIndex = 0;
+    renderOnboardingStep();
+  });
+}
+
+function replayOnboarding() {
+  wireOnboarding();
+  chrome.storage.local.remove(['onboardingComplete'], () => {
+    onboardingStepIndex = 0;
+    renderOnboardingStep();
+    showToast(t('onboardingReplayStarted'), 'info');
+  });
 }
 
 // ── Detected games (auto-scan) ───────────────────────────────────────────────
@@ -558,6 +731,7 @@ function renderLargeWishlistImport(allIds, storeName, tabId) {
           addedDate: new Date().toISOString(),
           alertEnabled: false,
           alertThreshold: null,
+          alertThresholdCustom: false,
         });
         added++;
       }
@@ -597,7 +771,16 @@ function renderLargeWishlistImport(allIds, storeName, tabId) {
             if (wl && wl.title.startsWith('Steam App ') && game.title) {
               wl.title = game.title;
               const best = getBestPrice(game.prices);
-              if (wl.addedPrice === null) { wl.addedPrice = best; wl.alertThreshold = best; }
+              const histLow = getBestHistoricalLow(game.prices);
+              const cur = game.prices?.currency || 'USD';
+              if (wl.addedPrice === null) { wl.addedPrice = best; }
+              if (!wl.alertThresholdCustom) {
+                const autoThreshold = histLow ?? best;
+                if (autoThreshold !== null && autoThreshold !== undefined) {
+                  wl.alertThreshold = autoThreshold;
+                  wl.alertThresholdCurrency = cur;
+                }
+              }
             }
           }
           saveData();
@@ -637,13 +820,17 @@ function renderDetectedResults(validEntries, isWishlistPage, storeName) {
       for (const [id, game] of validEntries) {
         if (wishlist.some((w) => w.id === id)) continue;
         const best = getBestPrice(game.prices);
+        const histLow = getBestHistoricalLow(game.prices);
+        const currency = game.prices?.currency || 'USD';
         wishlist.push({
           id: String(id),
           title: game.title || 'Unknown',
           addedPrice: best,
           addedDate: new Date().toISOString(),
           alertEnabled: false,
-          alertThreshold: best,
+          alertThreshold: histLow ?? best,
+          alertThresholdCustom: false,
+          alertThresholdCurrency: currency,
         });
         added++;
       }
@@ -1037,28 +1224,11 @@ function renderGameCard(id, game) {
   const chartHtml = history.length > 1 ? generateChart(history, currency) : '';
   const inWishlist = wishlist.some((w) => w.id === id);
 
-  const imgCandidates = [
-    // Prefer Steam app artwork to match what users see on store pages.
-    `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${id}/header.jpg`,
-    `https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/header.jpg`,
-    `https://cdn.akamai.steamstatic.com/steam/apps/${id}/header.jpg`,
-    game?.info?.image,
-    game?.image,
-    game?.thumbnail,
-    game?.cover,
-  ].filter(Boolean);
-  const imgSrc = imgCandidates[0];
-  const imgFallbacks = [
-    `https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/capsule_616x353.jpg`,
-    `https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/library_600x900_2x.jpg`,
-    `https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/capsule_231x87.jpg`,
-    `https://cdn.akamai.steamstatic.com/steam/apps/${id}/header.jpg`,
-    `https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/header.jpg`,
-  ].join('|');
+  const imageInfo = getResolvedImageForGame(id, game);
 
   return `<div class="game-card" data-game-id="${id}">
     <div class="game-card-body">
-      <img class="game-card-img" src="${escapeHtml(imgSrc)}" data-fallbacks="${escapeAttr(imgFallbacks)}" alt="${escapeHtml(game.title || '')}">
+      <img class="game-card-img" src="${escapeHtml(imageInfo.src)}" data-fallbacks="${escapeAttr(imageInfo.fallbacks)}" alt="${escapeHtml(game.title || '')}">
       <div class="game-card-content">
         <div class="game-title-row">
           <div class="game-title">${escapeHtml(game.title || 'Unknown')}</div>
@@ -1080,6 +1250,34 @@ function renderGameCard(id, game) {
     </div>
     <div class="bundle-container" id="bundleContainer_${id}"></div>
   </div>`;
+}
+
+function getResolvedImageForGame(id, game = null) {
+  const appId = String(id);
+  const custom = imageOverrides[appId];
+  if (custom) {
+    return { src: custom, fallbacks: '' };
+  }
+  const imgCandidates = [
+    // Prefer Steam app artwork to match what users see on store pages.
+    `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${appId}/header.jpg`,
+    `https://cdn.cloudflare.steamstatic.com/steam/apps/${appId}/header.jpg`,
+    `https://cdn.akamai.steamstatic.com/steam/apps/${appId}/header.jpg`,
+    game?.info?.image,
+    game?.image,
+    game?.thumbnail,
+    game?.cover,
+  ].filter(Boolean);
+  const imgSrc = imgCandidates[0];
+  const fallbackSources = [
+    ...imgCandidates.slice(1),
+    `https://cdn.cloudflare.steamstatic.com/steam/apps/${appId}/capsule_616x353.jpg`,
+    `https://cdn.cloudflare.steamstatic.com/steam/apps/${appId}/library_600x900_2x.jpg`,
+    `https://cdn.cloudflare.steamstatic.com/steam/apps/${appId}/capsule_231x87.jpg`,
+    `https://cdn.akamai.steamstatic.com/steam/apps/${appId}/header.jpg`,
+    `https://cdn.cloudflare.steamstatic.com/steam/apps/${appId}/header.jpg`,
+  ].join('|');
+  return { src: imgSrc, fallbacks: fallbackSources };
 }
 
 function generateChart(history, currency) {
@@ -1150,46 +1348,165 @@ function attachCardListeners(container) {
 // ── Active Bundles tab ───────────────────────────────────────────────────────
 
 let bundlesLoaded = false;
-function loadActiveBundles() {
+let activeBundlesData = [];
+let activeBundlesFilter = 'all';
+let activeBundlesSort = 'expiry';
+
+function getBundleShopAndTitle(bundle) {
+  const rawTitle = String(bundle?.title || '');
+  let shopName = 'Store';
+  let bundleTitle = rawTitle;
+  const titleParts = rawTitle.split(' - ');
+  if (titleParts.length > 1) {
+    shopName = titleParts[0].trim();
+    bundleTitle = titleParts.slice(1).join(' - ').trim();
+  } else if (rawTitle) {
+    shopName = rawTitle.split(' ')[0];
+  }
+  return { shopName, bundleTitle };
+}
+
+function normalizeStoreName(name) {
+  return String(name || '').trim().toLowerCase();
+}
+
+function getBundleBestTierPrice(bundle) {
+  if (!Array.isArray(bundle?.tiers) || bundle.tiers.length === 0) return Infinity;
+  let best = Infinity;
+  for (const tr of bundle.tiers) {
+    const n = parseFloat(tr?.price);
+    if (!isNaN(n) && n > 0) best = Math.min(best, n);
+  }
+  return best;
+}
+
+async function getBundleComparisonForGame(id, bestPrice, currency) {
+  if (bestPrice == null || isNaN(bestPrice)) return { kind: 'none' };
+  return new Promise((resolve) => {
+    chrome.runtime.sendMessage({ action: 'getBundles', ids: [id], region: regionSelect.value }, (resp) => {
+      const bundles = resp?.success ? (resp.data?.[id]?.bundles || []) : [];
+      if (!bundles.length) {
+        resolve({ kind: 'none' });
+        return;
+      }
+      let bestBundle = null;
+      let bestTierPrice = Infinity;
+      for (const b of bundles) {
+        for (const tr of (b.tiers || [])) {
+          const tierPrice = parseFloat(tr?.price);
+          if (!isNaN(tierPrice) && tierPrice > 0 && tierPrice < bestTierPrice) {
+            bestTierPrice = tierPrice;
+            bestBundle = b;
+          }
+        }
+      }
+      if (!bestBundle || !isFinite(bestTierPrice)) {
+        resolve({ kind: 'none' });
+        return;
+      }
+      const delta = Math.round((bestPrice - bestTierPrice) * 100) / 100;
+      const { shopName } = getBundleShopAndTitle(bestBundle);
+      const cur = bestBundle?.tiers?.[0]?.currency || currency || 'USD';
+      if (delta >= 0) {
+        resolve({
+          kind: 'worth',
+          shopName,
+          tierPrice: bestTierPrice,
+          delta,
+          currency: cur,
+        });
+      } else {
+        resolve({
+          kind: 'higher',
+          shopName,
+          tierPrice: bestTierPrice,
+          delta: Math.abs(delta),
+          currency: cur,
+        });
+      }
+    });
+  });
+}
+
+function renderActiveBundles() {
   const container = document.getElementById('bundlesContent');
-  if (bundlesLoaded && container.innerHTML.trim()) return;
-  showLoadingSpinner(container, t('loadingBundles'));
-  chrome.runtime.sendMessage({ action: 'getActiveBundles', region: regionSelect.value }, (resp) => {
-    if (resp && resp.rateLimit) updateRateLimit(resp.rateLimit);
-    if (!resp || !resp.success) {
-      container.innerHTML = `<div class="error"><span class="error-icon">⚠️</span><div><div>${friendlyError(resp?.error)}</div><div class="error-actions"><button class="btn-sm btn-outline" data-action="retryBundles">Retry</button></div></div></div>`;
-      return;
+  if (!container) return;
+  const bundles = Array.isArray(activeBundlesData) ? activeBundlesData : [];
+  if (bundles.length === 0) {
+    container.innerHTML = `<div class="empty"><span class="empty-icon">📦</span>${escapeHtml(t('noActiveBundlesNow'))}</div>`;
+    return;
+  }
+
+  const storeMap = new Map();
+  for (const b of bundles) {
+    const { shopName } = getBundleShopAndTitle(b);
+    const key = normalizeStoreName(shopName);
+    if (!key) continue;
+    if (!storeMap.has(key)) storeMap.set(key, shopName);
+  }
+
+  const filtered = bundles.filter((b) => {
+    if (activeBundlesFilter === 'all') return true;
+    const { shopName } = getBundleShopAndTitle(b);
+    return normalizeStoreName(shopName) === activeBundlesFilter;
+  });
+
+  const sorted = [...filtered].sort((a, b) => {
+    if (activeBundlesSort === 'title') {
+      const at = getBundleShopAndTitle(a).bundleTitle.toLowerCase();
+      const bt = getBundleShopAndTitle(b).bundleTitle.toLowerCase();
+      return at.localeCompare(bt);
     }
-    const bundles = resp.data || [];
-    if (bundles.length === 0) {
-      container.innerHTML = `<div class="empty"><span class="empty-icon">📦</span>${escapeHtml(t('noActiveBundlesNow'))}</div>`;
-      return;
-    }
-    let h = `<div class="section-label" style="margin-bottom:10px">${escapeHtml(bundles.length !== 1 ? t('activeBundlesCount', String(bundles.length)) : t('activeBundleCount', String(bundles.length)))}</div>`;
-    for (const b of bundles) {
+    if (activeBundlesSort === 'price-asc') return getBundleBestTierPrice(a) - getBundleBestTierPrice(b);
+    if (activeBundlesSort === 'price-desc') return getBundleBestTierPrice(b) - getBundleBestTierPrice(a);
+    // default: soonest expiry first; unknown dates last
+    const ad = a?.dateTo ? new Date(a.dateTo + ' UTC').getTime() : Infinity;
+    const bd = b?.dateTo ? new Date(b.dateTo + ' UTC').getTime() : Infinity;
+    return ad - bd;
+  });
+
+  let filterOptions = `<option value="all"${activeBundlesFilter === 'all' ? ' selected' : ''}>All stores</option>`;
+  Array.from(storeMap.entries())
+    .sort((a, b) => a[1].localeCompare(b[1]))
+    .forEach(([key, label]) => {
+      filterOptions += `<option value="${escapeAttr(key)}"${activeBundlesFilter === key ? ' selected' : ''}>${escapeHtml(label)}</option>`;
+    });
+
+  const countLabel = sorted.length !== 1
+    ? t('activeBundlesCount', String(sorted.length))
+    : t('activeBundleCount', String(sorted.length));
+
+  let h = `<div class="bundles-controls">
+      <div class="section-label bundles-count-label">${escapeHtml(countLabel)}</div>
+      <div class="bundles-control-row">
+        <label class="bundles-control-label">Store</label>
+        <select id="activeBundleStoreFilter" class="bundles-control-select">${filterOptions}</select>
+        <label class="bundles-control-label">Sort</label>
+        <select id="activeBundleSort" class="bundles-control-select">
+          <option value="expiry"${activeBundlesSort === 'expiry' ? ' selected' : ''}>Ending soon</option>
+          <option value="price-asc"${activeBundlesSort === 'price-asc' ? ' selected' : ''}>Price: low to high</option>
+          <option value="price-desc"${activeBundlesSort === 'price-desc' ? ' selected' : ''}>Price: high to low</option>
+          <option value="title"${activeBundlesSort === 'title' ? ' selected' : ''}>Title A-Z</option>
+        </select>
+      </div>
+    </div>`;
+
+  if (sorted.length === 0) {
+    h += `<div class="empty"><span class="empty-icon">🔎</span>No bundles match this filter.</div>`;
+    container.innerHTML = h;
+  } else {
+    for (const b of sorted) {
       let expiryHtml = '';
       if (b.dateTo) {
         const days = Math.ceil((new Date(b.dateTo + ' UTC') - new Date()) / 86400000);
         if (days > 0) expiryHtml = `<div class="bundle-expiry">⏰ ${escapeHtml(days !== 1 ? t('daysLeft', String(days)) : t('dayLeft', String(days)))}</div>`;
       }
 
-      // The API embeds the store name in the title: "Fanatical - Build your own bundle"
-      let shopName = 'Store';
-      let bundleTitle = b.title;
-      const titleParts = b.title.split(' - ');
-      if (titleParts.length > 1) {
-        shopName = titleParts[0].trim();
-        bundleTitle = titleParts.slice(1).join(' - ').trim();
-      } else {
-        // Fallback for titles without dashes
-        shopName = b.title.split(' ')[0];
-      }
+      const { shopName, bundleTitle } = getBundleShopAndTitle(b);
 
       // Map common store keywords to their actual domains for accurate favicon fetching
       let domain = null;
-      // GG.deals URLs often contain the retailer name even if the shopName acts as a publisher/tier name
       const s = shopName.toLowerCase() + ' ' + (b.url || '').toLowerCase();
-
       if (s.includes('humble')) domain = 'humblebundle.com';
       else if (s.includes('fanatical')) domain = 'fanatical.com';
       else if (s.includes('indiegala')) domain = 'indiegala.com';
@@ -1200,24 +1517,18 @@ function loadActiveBundles() {
       else if (s.includes('cdkeys')) domain = 'cdkeys.com';
       else if (s.includes('greenman') || s.includes('gmg')) domain = 'greenmangaming.com';
 
-      // Use Google's S2 Favicon service if domain is mapped, otherwise fallback to our clean branded icon
-      // This prevents Google S2 from returning low-res blurry globes for unrecognized string guesses
       const storeLogoUrl = domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=128` : 'images/icon-128.png';
-
-      // Use the crisp store logo as the main image
       const imgSrc = b.image || storeLogoUrl;
-
-      // Also create a tiny badge (only show the icon badge if we have a valid domain)
       const storeBadgeHtml = domain
         ? `<div class="active-bundle-store" style="display:flex;align-items:center;gap:4px;"><img src="${storeLogoUrl}" style="width:12px;height:12px;border-radius:2px;">${escapeHtml(shopName)}</div>`
         : `<div class="active-bundle-store">${escapeHtml(shopName)}</div>`;
 
       h += `<div class="active-bundle-card">
-        <div class="active-bundle-body">
-          <img class="active-bundle-img" style="background:#fff; padding:4px;" src="${escapeHtml(imgSrc)}" alt="${escapeHtml(shopName)}">
-          <div class="active-bundle-content">
-            <div class="active-bundle-header"><div class="active-bundle-title" style="margin-right:8px">${escapeHtml(bundleTitle)}</div>${storeBadgeHtml}</div>
-            <div class="active-bundle-tiers">`;
+          <div class="active-bundle-body">
+            <img class="active-bundle-img" style="background:#fff; padding:4px;" src="${escapeHtml(imgSrc)}" alt="${escapeHtml(shopName)}">
+            <div class="active-bundle-content">
+              <div class="active-bundle-header"><div class="active-bundle-title" style="margin-right:8px">${escapeHtml(bundleTitle)}</div>${storeBadgeHtml}</div>
+              <div class="active-bundle-tiers">`;
 
       if (b.tiers) {
         for (const tr of b.tiers) {
@@ -1229,10 +1540,36 @@ function loadActiveBundles() {
       h += `</div>${expiryHtml}`;
       if (b.url) h += `<a class="game-link" href="${b.url}" target="_blank" rel="noopener" style="display:block;margin-top:6px">${escapeHtml(t('viewBundle'))}</a>`;
       h += `</div>
-        </div>
-      </div>`;
+          </div>
+        </div>`;
     }
     container.innerHTML = h;
+  }
+
+  document.getElementById('activeBundleStoreFilter')?.addEventListener('change', (e) => {
+    activeBundlesFilter = e.target.value || 'all';
+    renderActiveBundles();
+  });
+  document.getElementById('activeBundleSort')?.addEventListener('change', (e) => {
+    activeBundlesSort = e.target.value || 'expiry';
+    renderActiveBundles();
+  });
+}
+
+function loadActiveBundles() {
+  const container = document.getElementById('bundlesContent');
+  if (bundlesLoaded && container.innerHTML.trim()) return;
+  showLoadingSpinner(container, t('loadingBundles'));
+  chrome.runtime.sendMessage({ action: 'getActiveBundles', region: regionSelect.value }, (resp) => {
+    if (resp && resp.rateLimit) updateRateLimit(resp.rateLimit);
+    if (!resp || !resp.success) {
+      container.innerHTML = `<div class="error"><span class="error-icon">⚠️</span><div><div>${friendlyError(resp?.error)}</div><div class="error-actions"><button class="btn-sm btn-outline" data-action="retryBundles">Retry</button></div></div></div>`;
+      return;
+    }
+    activeBundlesData = resp.data || [];
+    activeBundlesFilter = 'all';
+    activeBundlesSort = 'expiry';
+    renderActiveBundles();
     bundlesLoaded = true;
   });
 }
@@ -1242,7 +1579,18 @@ window.loadActiveBundles = loadActiveBundles;
 
 function addToWishlist(id, title, price) {
   if (wishlist.some((w) => w.id === id)) return;
-  wishlist.push({ id, title, addedPrice: price, addedDate: new Date().toISOString(), alertEnabled: false, alertThreshold: price });
+  // alertThreshold starts at the current best price; it will be auto-synced to
+  // the historical low (in the current region's currency) on the next detail load
+  // since alertThresholdCustom is false.
+  wishlist.push({
+    id,
+    title,
+    addedPrice: price,
+    addedDate: new Date().toISOString(),
+    alertEnabled: false,
+    alertThreshold: price,
+    alertThresholdCustom: false,
+  });
   saveData();
 }
 
@@ -1275,12 +1623,11 @@ function displayWishlist() {
     const dateStr = new Date(item.addedDate).toLocaleDateString();
     const lastKnown = item.lastPrice != null ? `${item.lastPrice} ${item.lastCurrency || 'USD'}` : null;
 
-    // Use Steam CDN for crisp, guaranteed game cover art
-    const imgSrc = `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${item.id}/header.jpg`;
+    const imageInfo = getResolvedImageForGame(item.id);
 
     html += `<div class="wishlist-item" data-wl-id="${item.id}">
       <div class="wishlist-header" data-wl-expand="${item.id}">
-        <img class="wishlist-img" src="${escapeHtml(imgSrc)}" alt="${escapeHtml(item.title)}">
+        <img class="wishlist-img" src="${escapeHtml(imageInfo.src)}" data-fallbacks="${escapeAttr(imageInfo.fallbacks)}" alt="${escapeHtml(item.title)}">
         <div class="wishlist-header-info">
           <div class="wishlist-title">${escapeHtml(item.title)}</div>
           <div class="wishlist-meta"><span>${escapeHtml(t('addedOn', dateStr))}</span>${item.addedPrice != null ? `<span>${escapeHtml(t('atPrice', String(item.addedPrice)))}</span>` : ''}</div>
@@ -1336,7 +1683,15 @@ function displayWishlist() {
             }
             if (w.addedPrice === null && best !== null) {
               w.addedPrice = best;
-              w.alertThreshold = best;
+            }
+            // Keep threshold in sync with the current historical low unless the user customized it
+            if (!w.alertThresholdCustom) {
+              const histLow = getBestHistoricalLow(game.prices);
+              const autoThreshold = histLow ?? best;
+              if (autoThreshold !== null && autoThreshold !== undefined) {
+                w.alertThreshold = autoThreshold;
+                w.alertThresholdCurrency = cur;
+              }
             }
           }
         }
@@ -1367,7 +1722,7 @@ function loadWishlistItemDetail(id) {
 
   detailEl.innerHTML = '<div class="loading" style="padding:12px"><div class="spinner"></div><div class="loading-text">Loading prices…</div></div>';
 
-  chrome.runtime.sendMessage({ action: 'lookupByIds', ids: [id], region: regionSelect.value }, (resp) => {
+  chrome.runtime.sendMessage({ action: 'lookupByIds', ids: [id], region: regionSelect.value }, async (resp) => {
     if (resp?.rateLimit) updateRateLimit(resp.rateLimit);
     const data = applyOfficialOnlyToData(resp?.data || {});
     if (!resp?.success || !data[id]) {
@@ -1381,11 +1736,13 @@ function loadWishlistItemDetail(id) {
     const histRetail = p.historicalRetail ? parseFloat(p.historicalRetail) : null;
     const histKey = p.historicalKeyshops ? parseFloat(p.historicalKeyshops) : null;
     const best = getBestPrice(p);
+    const histLow = getBestHistoricalLow(p);
 
     const badge = document.getElementById(`wlPrice_${id}`);
     if (badge && best !== null) { badge.textContent = `${best} ${currency}`; badge.classList.remove('unknown'); }
 
     const wl = wishlist.find((w) => w.id === id);
+    let thresholdNotice = '';
     if (wl) {
       wl.lastPrice = best;
       wl.lastCurrency = currency;
@@ -1397,7 +1754,28 @@ function loadWishlistItemDetail(id) {
       }
       if (wl.addedPrice === null && best !== null) {
         wl.addedPrice = best;
-        wl.alertThreshold = best;
+      }
+      // Auto-sync threshold to the historical low (in the current region's
+      // currency) unless the user has manually customized it.
+      if (!wl.alertThresholdCustom) {
+        const autoThreshold = histLow ?? best;
+        if (autoThreshold !== null && autoThreshold !== undefined) {
+          wl.alertThreshold = autoThreshold;
+          wl.alertThresholdCurrency = currency;
+        }
+      } else {
+        const fromCurrency = String(wl.alertThresholdCurrency || wl.lastCurrency || '').toUpperCase();
+        const toCurrency = String(currency || '').toUpperCase();
+        if (wl.alertThreshold != null && fromCurrency && toCurrency && fromCurrency !== toCurrency) {
+          try {
+            const converted = await convertCurrencyAmount(wl.alertThreshold, fromCurrency, toCurrency);
+            wl.alertThreshold = converted;
+            wl.alertThresholdCurrency = toCurrency;
+            thresholdNotice = `Custom alert converted from ${fromCurrency} to ${toCurrency} using latest exchange rates.`;
+          } catch {
+            thresholdNotice = `Custom alert is set in ${fromCurrency}; current prices are in ${toCurrency}. Conversion failed, please review manually.`;
+          }
+        }
       }
       saveData();
     }
@@ -1426,28 +1804,80 @@ function loadWishlistItemDetail(id) {
     }
 
     const score = calculateDealScore(p, false);
-    const threshold = wl?.alertThreshold ?? best ?? '';
+    const threshold = wl?.alertThreshold ?? histLow ?? best ?? '';
+    const bundleCalloutId = `wlBundleCallout_${id}`;
 
     detailEl.innerHTML = `<div style="padding-top:10px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">${changeHtml}${dealScoreBadge(score)}</div>
       <div class="price-section">${pc(t('officialStores'), p.currentRetail, retailDisc, !bestIsKey && retailDisc)}${pc(t('keyshops'), p.currentKeyshops, keyDisc, bestIsKey)}</div>
       ${histHtml}
+      <div id="${bundleCalloutId}"></div>
       <div class="wishlist-alert-row">
         <input type="checkbox" class="toggle-switch" id="wlAlert_${id}" ${wl?.alertEnabled ? 'checked' : ''} />
         <label for="wlAlert_${id}" style="cursor:pointer">${escapeHtml(t('alertBelow'))}</label>
         <input type="number" id="wlThreshold_${id}" value="${threshold}" step="0.01" min="0" placeholder="Price" />
-        <span style="color:var(--gg-text-muted);font-size:0.72rem">${currency}</span>
+        <span id="wlCurrency_${id}" style="color:var(--gg-text-muted);font-size:0.72rem">${currency}</span>
       </div>
+      ${thresholdNotice ? `<div class="wishlist-alert-note">${escapeHtml(thresholdNotice)}</div>` : ''}
       <div class="wishlist-actions">
+        <button class="btn-sm btn-outline" id="wlSetImgBtn_${id}">🖼 Set image</button>
+        <button class="btn-sm btn-outline" id="wlResetImgBtn_${id}" ${imageOverrides[String(id)] ? '' : 'disabled'}>Reset image</button>
         <button class="btn-sm btn-outline" id="wlBundleBtn_${id}">📦 ${escapeHtml(t('bundlesBtn'))}</button>
         ${game.url ? `<a class="game-link" href="${game.url}" target="_blank" rel="noopener">${escapeHtml(t('viewOnGgDeals'))}</a>` : ''}
         <button class="btn-sm btn-danger" style="margin-left:auto" data-action="removeWishlist" data-id="${id}">✕ ${escapeHtml(t('removeBtn'))}</button>
       </div>
+      <input type="file" id="wlImageInput_${id}" accept="image/*" class="hidden" />
       <div id="wlBundleContainer_${id}"></div>
     </div>`;
 
     document.getElementById(`wlAlert_${id}`)?.addEventListener('change', () => saveWishlistAlert(id));
-    document.getElementById(`wlThreshold_${id}`)?.addEventListener('change', () => saveWishlistAlert(id));
+    document.getElementById(`wlThreshold_${id}`)?.addEventListener('change', () => {
+      const w = wishlist.find((w) => w.id === id);
+      if (w) w.alertThresholdCustom = true;
+      saveWishlistAlert(id);
+    });
+    document.getElementById(`wlSetImgBtn_${id}`)?.addEventListener('click', () => {
+      document.getElementById(`wlImageInput_${id}`)?.click();
+    });
+    document.getElementById(`wlImageInput_${id}`)?.addEventListener('change', async (e) => {
+      const file = e.target?.files?.[0];
+      if (!file) return;
+      try {
+        const customImage = await buildCustomImageDataUrl(file);
+        imageOverrides[String(id)] = customImage;
+        saveData();
+        refreshImagesForGame(id, game);
+        showToast('Custom image set', 'success');
+        const resetBtn = document.getElementById(`wlResetImgBtn_${id}`);
+        if (resetBtn) resetBtn.disabled = false;
+      } catch {
+        showToast('Failed to set custom image', 'error');
+      } finally {
+        e.target.value = '';
+      }
+    });
+    document.getElementById(`wlResetImgBtn_${id}`)?.addEventListener('click', () => {
+      const key = String(id);
+      if (!imageOverrides[key]) return;
+      delete imageOverrides[key];
+      saveData();
+      refreshImagesForGame(id, game);
+      showToast('Custom image removed', 'info');
+      const resetBtn = document.getElementById(`wlResetImgBtn_${id}`);
+      if (resetBtn) resetBtn.disabled = true;
+    });
+    const calloutEl = document.getElementById(bundleCalloutId);
+    if (calloutEl) {
+      calloutEl.innerHTML = `<div class="bundle-worth-callout loading">Checking active bundles for this game…</div>`;
+      const cmp = await getBundleComparisonForGame(id, best, currency);
+      if (cmp.kind === 'worth') {
+        calloutEl.innerHTML = `<div class="bundle-worth-callout worth">📦 Bundle watch: ${escapeHtml(cmp.shopName)} has a tier at <b>${cmp.tierPrice} ${cmp.currency}</b>, which is <b>${cmp.delta} ${cmp.currency}</b> below this game's current best price.</div>`;
+      } else if (cmp.kind === 'higher') {
+        calloutEl.innerHTML = `<div class="bundle-worth-callout higher">📦 Bundle watch: cheapest matching tier is <b>${cmp.tierPrice} ${cmp.currency}</b> at ${escapeHtml(cmp.shopName)}, about <b>${cmp.delta} ${cmp.currency}</b> above this game's current best price.</div>`;
+      } else {
+        calloutEl.innerHTML = `<div class="bundle-worth-callout neutral">📦 Bundle watch: no active bundle includes this game right now.</div>`;
+      }
+    }
     document.getElementById(`wlBundleBtn_${id}`)?.addEventListener('click', () => {
       const c = document.getElementById(`wlBundleContainer_${id}`);
       if (!c) return;
@@ -1476,8 +1906,10 @@ function saveWishlistAlert(id) {
   if (!w) return;
   const chk = document.getElementById(`wlAlert_${id}`);
   const inp = document.getElementById(`wlThreshold_${id}`);
+  const currencyEl = document.getElementById(`wlCurrency_${id}`);
   if (chk) w.alertEnabled = chk.checked;
   if (inp) w.alertThreshold = parseFloat(inp.value) || 0;
+  if (currencyEl) w.alertThresholdCurrency = currencyEl.textContent.trim().toUpperCase();
   saveData();
   showToast(chk?.checked ? t('alertEnabled') : t('alertDisabled'), 'success');
 }
@@ -1488,6 +1920,17 @@ function getBestPrice(prices) {
   const k = prices.currentKeyshops ? parseFloat(prices.currentKeyshops) : null;
   if (r !== null && k !== null) return Math.min(r, k);
   return r ?? k;
+}
+
+// Lowest historical low respecting the Official Stores Only preference.
+// Returns null if no historical data is available for the relevant source(s).
+function getBestHistoricalLow(prices) {
+  if (!prices) return null;
+  const r = prices.historicalRetail ? parseFloat(prices.historicalRetail) : null;
+  if (userPrefs.officialOnly) return (r !== null && !isNaN(r)) ? r : null;
+  const k = prices.historicalKeyshops ? parseFloat(prices.historicalKeyshops) : null;
+  if (r !== null && k !== null) return Math.min(r, k);
+  return (r !== null) ? r : (k !== null) ? k : null;
 }
 
 window.loadWishlistItemDetail = loadWishlistItemDetail;
@@ -1532,7 +1975,9 @@ function importWishlist(e) {
         wishlist.push({
           id: String(item.id), title: String(item.title),
           addedPrice: item.addedPrice ?? null, addedDate: item.addedDate || new Date().toISOString(),
-          alertEnabled: false, alertThreshold: item.alertThreshold || item.addedPrice || 0,
+          alertEnabled: false,
+          alertThreshold: item.alertThreshold || item.addedPrice || 0,
+          alertThresholdCustom: !!item.alertThreshold,
         });
         added++;
       }
@@ -1645,6 +2090,9 @@ function wireSettings() {
       // Keep search tab selector in sync
       if (regionSelect) regionSelect.value = region;
       chrome.storage.local.set({ lastRegion: region });
+      // Force bundles refresh for the new region's pricing/currency.
+      bundlesLoaded = false;
+      activeBundlesData = [];
       savePrefs();
       showToast(t('regionToast', region.toUpperCase()), 'info');
     });
@@ -1691,6 +2139,12 @@ function wireSettings() {
     document.getElementById('historyCount').textContent = '0';
     showToast(t('priceHistoryCleared'), 'success');
   });
+
+  document.getElementById('viewChangelogBtn').addEventListener('click', () => {
+    chrome.tabs.create({ url: chrome.runtime.getURL('CHANGELOG.md') });
+  });
+
+  document.getElementById('replayOnboardingBtn').addEventListener('click', () => replayOnboarding());
 }
 wireSettings();
 
@@ -1722,7 +2176,7 @@ document.body.addEventListener('click', (e) => {
 
 function saveData() {
   // Local: everything (fast, no size limit)
-  chrome.storage.local.set({ wishlist, priceHistory, notificationSettings });
+  chrome.storage.local.set({ wishlist, priceHistory, notificationSettings, imageOverrides });
 
   // Sync: only small data (chrome.storage.sync has 8KB per-item limit)
   if (userPrefs.syncEnabled) {
@@ -1735,6 +2189,51 @@ function saveData() {
       }
     } catch { /* sync unavailable */ }
   }
+}
+
+function refreshImagesForGame(id, game = null) {
+  const appId = String(id);
+  const imageInfo = getResolvedImageForGame(appId, game);
+  document.querySelectorAll(`.game-card[data-game-id="${appId}"] .game-card-img`).forEach((img) => {
+    img.src = imageInfo.src;
+    img.dataset.fallbacks = imageInfo.fallbacks || '';
+  });
+  document.querySelectorAll(`.wishlist-item[data-wl-id="${appId}"] .wishlist-img`).forEach((img) => {
+    img.src = imageInfo.src;
+    img.dataset.fallbacks = imageInfo.fallbacks || '';
+  });
+}
+
+function buildCustomImageDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('file-read-failed'));
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const maxW = 460;
+          const maxH = 215;
+          const scale = Math.min(maxW / img.width, maxH / img.height, 1);
+          const w = Math.max(1, Math.round(img.width * scale));
+          const h = Math.max(1, Math.round(img.height * scale));
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) { reject(new Error('canvas-failed')); return; }
+          ctx.drawImage(img, 0, 0, w, h);
+          // JPEG keeps storage smaller than PNG for covers.
+          resolve(canvas.toDataURL('image/jpeg', 0.88));
+        } catch (e) {
+          reject(e);
+        }
+      };
+      img.onerror = () => reject(new Error('image-load-failed'));
+      img.src = String(reader.result || '');
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 // ── Global Image Error Fallback (Manifest V3 CSP-Safe) ──────────────────────

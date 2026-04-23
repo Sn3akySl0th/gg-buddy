@@ -58,7 +58,7 @@
   "settingsMaintenance": { "message": "Maintenance" },
   "clearCache": { "message": "Vider le cache" },
   "clearHistory": { "message": "Effacer l'historique" },
-
+  "viewChangelog": { "message": "Voir le journal des modifications" },
   "supportTitle": { "message": "Soutenez le développeur" },
   "supportDescription": { "message": "GG Buddy est gratuit et open-source. Si cela vous a aidé à économiser sur un gros jeu, offrez-moi un café !" },
   "supportButton": { "message": "Offrez-moi un café" },
@@ -230,5 +230,29 @@
 
   "overlayBest": { "message": "Meilleur : $price$", "placeholders": { "price": { "content": "$1" } } },
   "overlayHistoricalLow": { "message": "Plus bas historique" },
-  "overlayViewOnGgDeals": { "message": "Voir sur GG.deals →" }
+  "overlayViewOnGgDeals": { "message": "Voir sur GG.deals →" },
+
+  "onboardingSkip": { "message": "Passer la visite" },
+  "onboardingBack": { "message": "Retour" },
+  "onboardingNext": { "message": "Suivant" },
+  "onboardingDone": { "message": "C’est parti" },
+  "onboardingReplay": { "message": "Afficher la visite d’accueil" },
+  "onboardingReplayStarted": { "message": "Visite d’accueil lancée" },
+  "onboardingStep": {
+    "message": "Étape $current$ sur $total$",
+    "placeholders": {
+      "current": { "content": "$1" },
+      "total": { "content": "$2" }
+    }
+  },
+  "onboardingWelcomeTitle": { "message": "Bienvenue dans GG Buddy" },
+  "onboardingWelcomeBody": { "message": "GG Buddy trouve les prix des jeux PC via l’API GG.deals. Ouvrez cette fenêtre sur une boutique prise en charge pour voir les jeux détectés, ou explorez les onglets ci-dessous — cette courte visite présente l’essentiel." },
+  "onboardingStoresTitle": { "message": "Parcourir les boutiques prises en charge" },
+  "onboardingStoresBody": { "message": "Visitez Steam, Epic, GOG, Humble et bien d’autres (liste complète dans le readme). L’extension analyse l’onglet actif : regardez le badge dans l’en-tête et ouvrez l’onglet Détecté. Une barre de prix peut s’afficher en bas de page si la superposition est activée dans les paramètres." },
+  "onboardingHubTitle": { "message": "Tableau de bord & Recherche" },
+  "onboardingHubBody": { "message": "L’onglet Tableau de bord résume les offres pour vos jeux. La Recherche permet de trouver un titre ou un Steam App ID et de choisir la devise. Les scores d’affaire et les courbes aident à comparer le prix à l’historique." },
+  "onboardingWishlistTitle": { "message": "Liste de souhaits & alertes" },
+  "onboardingWishlistBody": { "message": "Ajoutez des jeux depuis les boutiques ou la recherche. Définissez un prix cible et activez les notifications dans les paramètres pour recevoir des alertes Chrome quand le prix baisse. Vous pouvez exporter la liste ou la sauvegarder en JSON." },
+  "onboardingPrefsTitle": { "message": "À votre façon" },
+  "onboardingPrefsBody": { "message": "Dans les paramètres : thème et couleur d’accent, activer ou désactiver la superposition des prix sur la page, et « Magasins officiels uniquement » pour masquer les keyshops dans la fenêtre, la superposition et les alertes de liste. Relancez la visite à tout moment via Maintenance → Afficher la visite d’accueil." }
 }

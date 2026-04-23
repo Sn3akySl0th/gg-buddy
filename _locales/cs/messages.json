@@ -48,7 +48,7 @@
   "settingsMaintenance": { "message": "Údržba" },
   "clearCache": { "message": "Vymazat mezipaměť" },
   "clearHistory": { "message": "Vymazat historii" },
-  "supportTitle": { "message": "Podpořte vývojáře" },
+  "viewChangelog": { "message": "Zobrazit seznam změn" },  "supportTitle": { "message": "Podpořte vývojáře" },
   "supportDescription": { "message": "GG Buddy je zdarma a s otevřeným zdrojovým kódem. Pokud vám pomohl ušetřit na hře, zvažte koupi kávy!" },
   "supportButton": { "message": "Kupte mi kávu" },
   "footerPoweredBy": { "message": "Poháněno" },
@@ -195,5 +195,29 @@
   "errorRequestTimedOut": { "message": "Vypršel časový limit požadavku" },
   "overlayBest": { "message": "Nejlepší: $price$", "placeholders": { "price": { "content": "$1" } } },
   "overlayHistoricalLow": { "message": "Historické minimum" },
-  "overlayViewOnGgDeals": { "message": "Zobrazit na GG.deals →" }
+  "overlayViewOnGgDeals": { "message": "Zobrazit na GG.deals →" },
+
+  "onboardingSkip": { "message": "Přeskočit prohlídku" },
+  "onboardingBack": { "message": "Zpět" },
+  "onboardingNext": { "message": "Další" },
+  "onboardingDone": { "message": "Začít" },
+  "onboardingReplay": { "message": "Zobrazit uvítací prohlídku" },
+  "onboardingReplayStarted": { "message": "Uvítací prohlídka spuštěna" },
+  "onboardingStep": {
+    "message": "Krok $current$ z $total$",
+    "placeholders": {
+      "current": { "content": "$1" },
+      "total": { "content": "$2" }
+    }
+  },
+  "onboardingWelcomeTitle": { "message": "Vítejte v GG Buddy" },
+  "onboardingWelcomeBody": { "message": "GG Buddy vyhledává ceny her pro PC přes API GG.deals. Otevřete toto vyskakovací okno na podporované stránce obchodu a uvidíte rozpoznané hry, nebo prozkoumejte záložky níže — tato krátká prohlídka ukáže základy." },
+  "onboardingStoresTitle": { "message": "Prohlížení podporovaných obchodů" },
+  "onboardingStoresBody": { "message": "Navštivte Steam, Epic, GOG, Humble a další (úplný seznam v readme). Rozšíření skenuje aktivní kartu: sledujte odznak v záhlaví a otevřete kartu Rozpoznáno. Panel s cenou se může zobrazit dole na stránce, pokud je v Nastavení zapnutý překryv." },
+  "onboardingHubTitle": { "message": "Přehled a vyhledávání" },
+  "onboardingHubBody": { "message": "Karta Přehled shrnuje nabídky pro vaše hry. Vyhledáváním najdete název nebo Steam App ID a zvolíte měnu. Skóre nabídek a minigrafy pomáhají posoudit cenu vůči historii." },
+  "onboardingWishlistTitle": { "message": "Seznam přání a upozornění" },
+  "onboardingWishlistBody": { "message": "Přidávejte hry ze stránek obchodů nebo z výsledků vyhledávání. Nastavte cílovou cenu a v Nastavení zapněte oznámení pro upozornění Chrome při poklesu ceny. Seznam můžete exportovat nebo zálohovat jako JSON." },
+  "onboardingPrefsTitle": { "message": "Podle vašich představ" },
+  "onboardingPrefsBody": { "message": "V Nastavení: motiv a barva zvýraznění, zapnutí nebo vypnutí překryvu cen na stránce a „Pouze oficiální obchody“ pro skrytí keyshopů v okně, překryvu a upozorněních seznamu. Prohlídku znovu spustíte v Údržba → Zobrazit uvítací prohlídku." }
 }

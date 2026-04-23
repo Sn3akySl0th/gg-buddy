@@ -58,7 +58,7 @@
   "settingsMaintenance": { "message": "Wartung" },
   "clearCache": { "message": "Cache leeren" },
   "clearHistory": { "message": "Verlauf löschen" },
-
+  "viewChangelog": { "message": "Änderungsprotokoll anzeigen" },
   "supportTitle": { "message": "Unterstütze den Entwickler" },
   "supportDescription": { "message": "GG Buddy ist kostenlos und Open-Source. Wenn es dir geholfen hat, bei einem großen Spiel zu sparen, spendier mir doch einen Kaffee!" },
   "supportButton": { "message": "Spendier mir einen Kaffee" },
@@ -230,5 +230,29 @@
 
   "overlayBest": { "message": "Bester: $price$", "placeholders": { "price": { "content": "$1" } } },
   "overlayHistoricalLow": { "message": "Historisches Tief" },
-  "overlayViewOnGgDeals": { "message": "Auf GG.deals ansehen →" }
+  "overlayViewOnGgDeals": { "message": "Auf GG.deals ansehen →" },
+
+  "onboardingSkip": { "message": "Tour überspringen" },
+  "onboardingBack": { "message": "Zurück" },
+  "onboardingNext": { "message": "Weiter" },
+  "onboardingDone": { "message": "Loslegen" },
+  "onboardingReplay": { "message": "Begrüßungstour anzeigen" },
+  "onboardingReplayStarted": { "message": "Begrüßungstour gestartet" },
+  "onboardingStep": {
+    "message": "Schritt $current$ von $total$",
+    "placeholders": {
+      "current": { "content": "$1" },
+      "total": { "content": "$2" }
+    }
+  },
+  "onboardingWelcomeTitle": { "message": "Willkommen bei GG Buddy" },
+  "onboardingWelcomeBody": { "message": "GG Buddy findet PC-Spielpreise über die GG.deals-API. Öffnen Sie dieses Popup auf einer unterstützten Shop-Seite, um erkannte Spiele zu sehen, oder nutzen Sie die Tabs unten — diese kurze Tour zeigt Ihnen das Wichtigste." },
+  "onboardingStoresTitle": { "message": "Unterstützte Shops durchstöbern" },
+  "onboardingStoresBody": { "message": "Besuchen Sie Steam, Epic, GOG, Humble und viele weitere Shops (vollständige Liste in der Readme). Die Erweiterung scannt den aktiven Tab: Achten Sie auf das Badge in der Kopfzeile und öffnen Sie den Tab „Erkannt“. Eine Preisleiste kann unten auf der Seite erscheinen, wenn die Einblendung in den Einstellungen aktiviert ist." },
+  "onboardingHubTitle": { "message": "Dashboard & Suche" },
+  "onboardingHubBody": { "message": "Im Dashboard-Tab sehen Sie eine Übersicht zu Deals für Ihre Spiele. Mit der Suche finden Sie jeden Titel oder die Steam-App-ID und wählen die Währung. Deal-Scores und Sparklines helfen, Preise im historischen Vergleich einzuschätzen." },
+  "onboardingWishlistTitle": { "message": "Wunschliste & Benachrichtigungen" },
+  "onboardingWishlistBody": { "message": "Fügen Sie Spiele von Shop-Seiten oder aus der Suche zur Wunschliste hinzu. Legen Sie einen Zielpreis fest und aktivieren Sie Benachrichtigungen in den Einstellungen, um Chrome-Hinweise bei Preissenkungen zu erhalten. Sie können die Liste exportieren oder als JSON sichern." },
+  "onboardingPrefsTitle": { "message": "So wie Sie es möchten" },
+  "onboardingPrefsBody": { "message": "In den Einstellungen: Thema und Akzentfarbe wählen, die Preiseinblendung auf Seiten ein- oder ausschalten und „Nur offizielle Shops“ nutzen, um Keyshops im Popup, in der Einblendung und bei Wunschlisten-Alarms auszublenden. Die Tour können Sie jederzeit unter Wartung → Begrüßungstour anzeigen erneut starten." }
 }

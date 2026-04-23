@@ -48,7 +48,7 @@
   "settingsMaintenance": { "message": "Обслуживание" },
   "clearCache": { "message": "Очистить кэш" },
   "clearHistory": { "message": "Очистить историю" },
-  "supportTitle": { "message": "Поддержите разработчика" },
+  "viewChangelog": { "message": "Показать список изменений" },  "supportTitle": { "message": "Поддержите разработчика" },
   "supportDescription": { "message": "GG Buddy — бесплатное приложение с открытым исходным кодом. Если оно помогло вам сэкономить на игре, угостите меня кофе!" },
   "supportButton": { "message": "Угостить кофе" },
   "footerPoweredBy": { "message": "Работает на" },
@@ -195,5 +195,29 @@
   "errorRequestTimedOut": { "message": "Время ожидания запроса истекло" },
   "overlayBest": { "message": "Лучшая: $price$", "placeholders": { "price": { "content": "$1" } } },
   "overlayHistoricalLow": { "message": "Исторический минимум" },
-  "overlayViewOnGgDeals": { "message": "Смотреть на GG.deals →" }
+  "overlayViewOnGgDeals": { "message": "Смотреть на GG.deals →" },
+
+  "onboardingSkip": { "message": "Пропустить тур" },
+  "onboardingBack": { "message": "Назад" },
+  "onboardingNext": { "message": "Далее" },
+  "onboardingDone": { "message": "Начать" },
+  "onboardingReplay": { "message": "Показать приветственный тур" },
+  "onboardingReplayStarted": { "message": "Приветственный тур запущен" },
+  "onboardingStep": {
+    "message": "Шаг $current$ из $total$",
+    "placeholders": {
+      "current": { "content": "$1" },
+      "total": { "content": "$2" }
+    }
+  },
+  "onboardingWelcomeTitle": { "message": "Добро пожаловать в GG Buddy" },
+  "onboardingWelcomeBody": { "message": "GG Buddy находит цены на ПК-игры через API GG.deals. Откройте это окно на странице поддерживаемого магазина, чтобы увидеть найденные игры, или изучите вкладки ниже — этот короткий тур покажет главное." },
+  "onboardingStoresTitle": { "message": "Поддерживаемые магазины" },
+  "onboardingStoresBody": { "message": "Заходите в Steam, Epic, GOG, Humble и другие (полный список в readme). Расширение сканирует активную вкладку: смотрите значок в шапке и откройте вкладку «Найдено». Полоса с ценой может появиться внизу страницы, если оверлей включён в Настройках." },
+  "onboardingHubTitle": { "message": "Панель и Поиск" },
+  "onboardingHubBody": { "message": "Вкладка «Панель» суммирует предложения по вашим играм. В «Поиске» введите название или Steam App ID и выберите валюту. Оценка сделки и мини-графики помогают сравнить цену с историей." },
+  "onboardingWishlistTitle": { "message": "Список желаний и оповещения" },
+  "onboardingWishlistBody": { "message": "Добавляйте игры со страниц магазинов или из поиска. Задайте целевую цену и включите уведомления в Настройках для оповещений Chrome при снижении цены. Можно экспортировать список или сохранить JSON." },
+  "onboardingPrefsTitle": { "message": "Настройте под себя" },
+  "onboardingPrefsBody": { "message": "В Настройках: тема и цвет акцента, оверлей цен на странице и «Только официальные магазины», чтобы скрыть кейшопы во всплывающем окне, оверлее и оповещениях списка. Повторить тур: Обслуживание → Показать приветственный тур." }
 }

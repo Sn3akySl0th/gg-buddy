@@ -48,7 +48,7 @@
   "settingsMaintenance": { "message": "Underhåll" },
   "clearCache": { "message": "Rensa cache" },
   "clearHistory": { "message": "Rensa historik" },
-  "supportTitle": { "message": "Stöd utvecklaren" },
+  "viewChangelog": { "message": "Visa ändringslogg" },  "supportTitle": { "message": "Stöd utvecklaren" },
   "supportDescription": { "message": "GG Buddy är gratis och öppen källkod. Om det hjälpte dig spara pengar på ett spel, överväg att bjuda mig på en kaffe!" },
   "supportButton": { "message": "Bjud mig på en kaffe" },
   "footerPoweredBy": { "message": "Drivs av" },
@@ -195,5 +195,29 @@
   "errorRequestTimedOut": { "message": "Förfrågan tog för lång tid" },
   "overlayBest": { "message": "Bästa: $price$", "placeholders": { "price": { "content": "$1" } } },
   "overlayHistoricalLow": { "message": "Historiskt lägsta" },
-  "overlayViewOnGgDeals": { "message": "Visa på GG.deals →" }
+  "overlayViewOnGgDeals": { "message": "Visa på GG.deals →" },
+
+  "onboardingSkip": { "message": "Hoppa över rundturen" },
+  "onboardingBack": { "message": "Tillbaka" },
+  "onboardingNext": { "message": "Nästa" },
+  "onboardingDone": { "message": "Kom igång" },
+  "onboardingReplay": { "message": "Visa välkomstrundtur" },
+  "onboardingReplayStarted": { "message": "Välkomstrundtur startad" },
+  "onboardingStep": {
+    "message": "Steg $current$ av $total$",
+    "placeholders": {
+      "current": { "content": "$1" },
+      "total": { "content": "$2" }
+    }
+  },
+  "onboardingWelcomeTitle": { "message": "Välkommen till GG Buddy" },
+  "onboardingWelcomeBody": { "message": "GG Buddy hittar PC-spelpriser via GG.deals API. Öppna denna popup på en butikssida som stöds för att se identifierade spel, eller utforska flikarna nedan — denna korta rundtur visar grunderna." },
+  "onboardingStoresTitle": { "message": "Bläddra bland butiker som stöds" },
+  "onboardingStoresBody": { "message": "Besök Steam, Epic, GOG, Humble med flera (full lista i readme). Tillägget skannar den aktiva fliken: titta på märket i sidhuvudet och öppna fliken Identifierade. En prisrad kan visas längst ner när överlagring är påslagen under Inställningar." },
+  "onboardingHubTitle": { "message": "Instrumentpanel och Sök" },
+  "onboardingHubBody": { "message": "Fliken Instrumentpanel sammanfattar erbjudanden för dina spel. Använd Sök efter titel eller Steam App ID och välj valuta. Deal-poäng och smådiagram hjälper dig bedöma priset mot historiken." },
+  "onboardingWishlistTitle": { "message": "Önskelista och aviseringar" },
+  "onboardingWishlistBody": { "message": "Lägg till spel från butikssidor eller sökresultat. Ange målpris och slå på aviseringar under Inställningar för Chrome-aviseringar när priset sjunker. Du kan exportera listan eller spara som JSON." },
+  "onboardingPrefsTitle": { "message": "Anpassa" },
+  "onboardingPrefsBody": { "message": "Under Inställningar: tema och accentfärg, slå på eller av prisöverlagring på sidan och «Endast officiella butiker» för att dölja keyshops i popup, överlagring och önskelisteaviseringar. Spela rundturen igen under Underhåll → Visa välkomstrundtur." }
 }

@@ -58,7 +58,7 @@
   "settingsMaintenance": { "message": "Mantenimiento" },
   "clearCache": { "message": "Limpiar caché" },
   "clearHistory": { "message": "Borrar historial" },
-
+  "viewChangelog": { "message": "Ver registro de cambios" },
   "supportTitle": { "message": "Apoya al desarrollador" },
   "supportDescription": { "message": "GG Buddy es gratuito y de código abierto. Si te ayudó a ahorrar dinero en un gran juego, ¡considera invitarme a un café!" },
   "supportButton": { "message": "Invítame a un café" },
@@ -230,5 +230,29 @@
 
   "overlayBest": { "message": "Mejor: $price$", "placeholders": { "price": { "content": "$1" } } },
   "overlayHistoricalLow": { "message": "Mínimo histórico" },
-  "overlayViewOnGgDeals": { "message": "Ver en GG.deals →" }
+  "overlayViewOnGgDeals": { "message": "Ver en GG.deals →" },
+
+  "onboardingSkip": { "message": "Saltar tour" },
+  "onboardingBack": { "message": "Atrás" },
+  "onboardingNext": { "message": "Siguiente" },
+  "onboardingDone": { "message": "Empezar" },
+  "onboardingReplay": { "message": "Mostrar tour de bienvenida" },
+  "onboardingReplayStarted": { "message": "Tour de bienvenida iniciado" },
+  "onboardingStep": {
+    "message": "Paso $current$ de $total$",
+    "placeholders": {
+      "current": { "content": "$1" },
+      "total": { "content": "$2" }
+    }
+  },
+  "onboardingWelcomeTitle": { "message": "Te damos la bienvenida a GG Buddy" },
+  "onboardingWelcomeBody": { "message": "GG Buddy busca precios de juegos para PC con la API de GG.deals. Abre este menú en una tienda compatible para ver juegos detectados, o explora las pestañas de abajo: este tour corto te muestra lo esencial." },
+  "onboardingStoresTitle": { "message": "Navega por tiendas compatibles" },
+  "onboardingStoresBody": { "message": "Visita Steam, Epic, GOG, Humble y muchas más (lista completa en el readme). La extensión analiza la pestaña activa: mira la insignia del encabezado y abre la pestaña Detectados. Puede aparecer una barra de precios abajo si la superposición está activada en Ajustes." },
+  "onboardingHubTitle": { "message": "Panel y Búsqueda" },
+  "onboardingHubBody": { "message": "El panel resume ofertas de tus juegos. Usa Búsqueda por título o Steam App ID y elige moneda. La puntuación de oferta y las mini gráficas ayudan a ver si el precio es bueno frente al histórico." },
+  "onboardingWishlistTitle": { "message": "Lista de deseos y alertas" },
+  "onboardingWishlistBody": { "message": "Añade juegos desde la tienda o desde resultados de búsqueda. Define un precio objetivo y activa notificaciones en Ajustes para alertas de Chrome cuando baje el precio. Puedes exportar la lista o guardarla en JSON." },
+  "onboardingPrefsTitle": { "message": "Hazlo tuyo" },
+  "onboardingPrefsBody": { "message": "En Ajustes: tema y color de acento, activa o desactiva la superposición de precios en la página y «Solo tiendas oficiales» para ocultar keyshops en el menú, la superposición y las alertas de la lista. Puedes repetir el tour en Mantenimiento → Mostrar tour de bienvenida." }
 }

@@ -48,7 +48,7 @@
   "settingsMaintenance": { "message": "Ylläpito" },
   "clearCache": { "message": "Tyhjennä välimuisti" },
   "clearHistory": { "message": "Tyhjennä historia" },
-  "supportTitle": { "message": "Tue kehittäjää" },
+  "viewChangelog": { "message": "Näytä muutosloki" },  "supportTitle": { "message": "Tue kehittäjää" },
   "supportDescription": { "message": "GG Buddy on ilmainen ja avoimen lähdekoodin sovellus. Jos se auttoi sinua säästämään rahaa, harkitse kahvin ostamista!" },
   "supportButton": { "message": "Osta kahvi" },
   "footerPoweredBy": { "message": "Voimanlähde" },
@@ -195,5 +195,29 @@
   "errorRequestTimedOut": { "message": "Pyyntö aikakatkaistiin" },
   "overlayBest": { "message": "Paras: $price$", "placeholders": { "price": { "content": "$1" } } },
   "overlayHistoricalLow": { "message": "Historiallinen alin" },
-  "overlayViewOnGgDeals": { "message": "Näytä GG.deals →" }
+  "overlayViewOnGgDeals": { "message": "Näytä GG.deals →" },
+
+  "onboardingSkip": { "message": "Ohita esittely" },
+  "onboardingBack": { "message": "Takaisin" },
+  "onboardingNext": { "message": "Seuraava" },
+  "onboardingDone": { "message": "Aloita" },
+  "onboardingReplay": { "message": "Näytä tervetuliaiskierros" },
+  "onboardingReplayStarted": { "message": "Tervetuliaiskierros käynnistetty" },
+  "onboardingStep": {
+    "message": "Vaihe $current$ / $total$",
+    "placeholders": {
+      "current": { "content": "$1" },
+      "total": { "content": "$2" }
+    }
+  },
+  "onboardingWelcomeTitle": { "message": "Tervetuloa GG Buddyyn" },
+  "onboardingWelcomeBody": { "message": "GG Buddy hakee PC-pelien hintoja GG.deals-rajapinnan kautta. Avaa tämä ponnahdusikkuna tuetulla kauppasivulla nähdäksesi tunnistetut pelit tai selaa välilehtiä — tämä lyhyt kierros näyttää olennaisen." },
+  "onboardingStoresTitle": { "message": "Selaa tuettuja kauppoja" },
+  "onboardingStoresBody": { "message": "Vieraile Steamissa, Epicissä, GOGissa, Humblen kaupassa ja muissa (koko lista readme-tiedostossa). Laajennus skannaa aktiivisen välilehden: katso merkki otsikosta ja avaa Tunnistettu-välilehti. Hintapalkki voi näkyä sivun alareunassa, kun peitto on päällä Asetuksissa." },
+  "onboardingHubTitle": { "message": "Kojelauta ja Haku" },
+  "onboardingHubBody": { "message": "Kojelauta-välilehti tiivistää tarjoukset peleistäsi. Haulla löydät nimen tai Steam App ID:n ja valitset valuutan. Tarjouspisteet ja pienet kuvaajat auttavat vertaamaan hintaa historiaan." },
+  "onboardingWishlistTitle": { "message": "Toivelista ja hälytykset" },
+  "onboardingWishlistBody": { "message": "Lisää pelejä kauppasivuilta tai hakutuloksista. Aseta tavoitehinta ja ota ilmoitukset käyttöön Asetuksissa saadaksesi Chrome-hälytyksiä hinnan laskiessa. Voit viedä listan tai tallentaa JSONina." },
+  "onboardingPrefsTitle": { "message": "Muokkaa mieleiseksi" },
+  "onboardingPrefsBody": { "message": "Asetuksissa: teema ja korostusväri, sivun hintapeitto päälle tai pois ja «Vain viralliset kaupat» piilottaa keyshopit ponnahdusikkunassa, peitossa ja toivelistan hälytyksissä. Toista kierros kohdassa Ylläpito → Näytä tervetuliaiskierros." }
 }
