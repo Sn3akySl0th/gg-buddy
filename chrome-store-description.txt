@@ -22,6 +22,8 @@ Never overpay for a game again. GG Buddy automatically detects games on store pa
 
 📦 Dynamic Bundle Savings — Discover active bundles containing games you're looking at, complete with an automatic calculation of your exact percentage savings compared to individual purchases.
 
+🧠 Bundle Watchlist + Buy Recommendations — Your dashboard now highlights wishlisted games that are cheaper inside active bundles and adds simple Buy Now / Bundle Pick / Wait / Watch recommendations based on current price, historical low, and bundle value.
+
 🧠 Bundle Intelligence for Wishlist — In wishlist details, GG Buddy now flags when a game is available in an active bundle and highlights whether the cheapest bundle tier beats the standalone price, including how much you save.
 
 🎛️ Bundle Store Filters & Sorting — In the Active Bundles tab, quickly filter by store (e.g., Fanatical, Humble) and sort by ending soon, price low/high, or title.

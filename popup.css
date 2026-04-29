@@ -925,6 +925,22 @@ button:disabled {
   line-height: 1;
 }
 
+.dashboard-bundle-card {
+  align-items: flex-start;
+}
+
+.dashboard-bundle-meta {
+  color: var(--gg-text-sec);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.dashboard-bundle-save {
+  color: var(--gg-green);
+  font-size: 0.74rem;
+  font-weight: 900;
+}
+
 .dashboard-mini-meta {
   display: flex;
   align-items: center;
@@ -957,6 +973,39 @@ button:disabled {
 
 .pill-higher {
   background: var(--gg-red);
+}
+
+.recommendation-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-size: 0.64rem;
+  font-weight: 900;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.recommendation-badge.rec-bundle {
+  color: #fff;
+  background: var(--gg-green);
+}
+
+.recommendation-badge.rec-buy {
+  color: #18181c;
+  background: var(--gg-gold);
+}
+
+.recommendation-badge.rec-wait {
+  color: #fff;
+  background: var(--gg-orange);
+}
+
+.recommendation-badge.rec-watch {
+  color: #fff;
+  background: var(--gg-text-muted);
 }
 
 .dashboard-mini-score-col {
@@ -1209,7 +1258,7 @@ body.theme-oled .error {
 }
 
 .wishlist-item.expanded .wishlist-detail {
-  max-height: 600px;
+  max-height: 760px;
 }
 
 .wishlist-detail-inner {

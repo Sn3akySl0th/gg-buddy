@@ -936,16 +936,18 @@ function renderCachedDashboard(rl) {
   let totalBest = 0;
   let histLows = [];
   let recentDrops = [];
+  let bundlePicks = [];
 
   gamesWithPrices.forEach(g => {
     const p = g.pricesCache;
     if (!p) return;
-    const cR = parseFloat(p.currentRetail) || Infinity;
-    const cK = parseFloat(p.currentKeyshops) || Infinity;
     const hR = parseFloat(p.historicalRetail) || Infinity;
     const hK = parseFloat(p.historicalKeyshops) || Infinity;
-    const best = Math.min(cR, cK);
+    const bestValue = getBestPrice(p);
+    const best = bestValue === null ? Infinity : bestValue;
     const hist = Math.min(hR, hK);
+    const bundleComparison = g.bundleComparisonCache || { kind: 'none' };
+    const recommendation = g.recommendationCache || getBuyRecommendation(p, bundleComparison);
     
     // Add to savings metrics
     let retailPrice = parseFloat(p.currentRetail);
@@ -957,9 +959,13 @@ function renderCachedDashboard(rl) {
     }
 
     if (best <= hist && best !== Infinity) {
-      histLows.push({ ...g, best, hist });
+      histLows.push({ ...g, best, hist, recommendation });
     } else if (best < retailPrice && best !== Infinity) {
-      recentDrops.push({ ...g, best });
+      recentDrops.push({ ...g, best, recommendation });
+    }
+
+    if (recommendation?.kind === 'bundle_pick' && bundleComparison.kind === 'worth') {
+      bundlePicks.push({ ...g, best, bundleComparison, recommendation });
     }
   });
 
@@ -977,6 +983,28 @@ function renderCachedDashboard(rl) {
     </div>
   `;
 
+  if (bundlePicks.length > 0) {
+    html += `<div class="section-label" style="display:flex; justify-content:space-between; align-items:center;"><span>📦 ${escapeHtml(t('dashboardBundleWatchlist'))}</span><span style="border-radius:12px; background:var(--gg-green); color:#fff; padding:2px 8px; font-size:11px; font-weight:bold;">${bundlePicks.length}</span></div>`;
+    html += `<div class="dashboard-grid">`;
+    bundlePicks
+      .sort((a, b) => (b.bundleComparison.delta || 0) - (a.bundleComparison.delta || 0))
+      .slice(0, 4)
+      .forEach((g) => {
+        const cmp = g.bundleComparison;
+        html += `
+          <div class="dashboard-mini-card dashboard-bundle-card" data-id="${escapeAttr(g.id)}">
+            <div class="dashboard-mini-info">
+              <div class="dashboard-mini-title">${escapeHtml(g.title)}</div>
+              <div class="dashboard-mini-meta">${renderRecommendationBadge(g.recommendation)}</div>
+              <div class="dashboard-bundle-meta">${escapeHtml(cmp.shopName)} · ${cmp.tierPrice} ${cmp.currency}${cmp.gamesCount ? ` · ${cmp.gamesCount} ${Number(cmp.gamesCount) === 1 ? t('game') : t('games')}` : ''}</div>
+              <div class="dashboard-bundle-save">${escapeHtml(t('bundleSavesVsStandalone', String(cmp.delta), cmp.currency))}</div>
+            </div>
+          </div>
+        `;
+      });
+    html += `</div>`;
+  }
+
   if (histLows.length > 0) {
     html += `<div class="section-label" style="display:flex; justify-content:space-between; align-items:center;"><span>⭐ At Historical Low</span><span style="border-radius:12px; background:#e6a400; color:#18181c; padding:2px 8px; font-size:11px; font-weight:bold;">${histLows.length}</span></div>`;
     html += `<div class="dashboard-grid">`;
@@ -986,6 +1014,7 @@ function renderCachedDashboard(rl) {
       html += `
         <div class="dashboard-mini-card" data-id="${g.id}">
           <div class="dashboard-mini-title">${escapeHtml(g.title)}</div>
+          <div class="dashboard-mini-meta">${renderRecommendationBadge(g.recommendation)}</div>
           <div class="dashboard-mini-price">${dropPrice} ${currency}</div>
         </div>
       `;
@@ -1002,6 +1031,7 @@ function renderCachedDashboard(rl) {
       html += `
         <div class="dashboard-mini-card" data-id="${g.id}">
           <div class="dashboard-mini-title">${escapeHtml(g.title)}</div>
+          <div class="dashboard-mini-meta">${renderRecommendationBadge(g.recommendation)}</div>
           <div class="dashboard-mini-price">${dropPrice} ${currency}</div>
         </div>
       `;
@@ -1029,17 +1059,30 @@ function loadDashboardData() {
   showLoadingSpinner(dashboardEl, t('loadingWishlist'));
   
   chrome.runtime.sendMessage({ action: 'lookupByIds', ids: idsToLoad, region: regionSelect.value }, (resp) => {
-    if (resp && resp.success) {
-      const data = applyOfficialOnlyToData(resp.data);
-      // Update cache
+    if (!resp || !resp.success) {
+      renderCachedDashboard(null);
+      return;
+    }
+    const data = applyOfficialOnlyToData(resp.data);
+    wishlist.forEach((w) => {
+      if (data[w.id]) {
+        w.pricesCache = data[w.id].prices;
+      }
+    });
+
+    chrome.runtime.sendMessage({ action: 'getBundles', ids: idsToLoad, region: regionSelect.value }, (bundleResp) => {
+      const bundleData = bundleResp?.success ? (bundleResp.data || {}) : {};
       wishlist.forEach((w) => {
-        if (data[w.id]) {
-            w.pricesCache = data[w.id].prices;
-        }
+        if (!w.pricesCache) return;
+        const best = getBestPrice(w.pricesCache);
+        const currency = w.pricesCache.currency || 'USD';
+        const bundles = bundleData?.[w.id]?.bundles || [];
+        w.bundleComparisonCache = analyzeBundleComparison(bundles, best, currency);
+        w.recommendationCache = getBuyRecommendation(w.pricesCache, w.bundleComparisonCache);
       });
       saveData();
-    }
-    renderCachedDashboard(null);
+      renderCachedDashboard(null);
+    });
   });
 }
 
@@ -1223,6 +1266,7 @@ function renderGameCard(id, game) {
   const history = priceHistory[id] || [];
   const chartHtml = history.length > 1 ? generateChart(history, currency) : '';
   const inWishlist = wishlist.some((w) => w.id === id);
+  const recommendation = getBuyRecommendation(p, null);
 
   const imageInfo = getResolvedImageForGame(id, game);
 
@@ -1232,6 +1276,7 @@ function renderGameCard(id, game) {
       <div class="game-card-content">
         <div class="game-title-row">
           <div class="game-title">${escapeHtml(game.title || 'Unknown')}</div>
+          ${renderRecommendationBadge(recommendation)}
           ${dealScoreBadge(score)}
         </div>
         <div class="price-section">
@@ -1402,52 +1447,105 @@ function getBundleBestTierPrice(bundle) {
   return best;
 }
 
+function getBundleTierGameCount(bundle) {
+  if (!Array.isArray(bundle?.tiers) || bundle.tiers.length === 0) return null;
+  let bestTier = null;
+  let bestPrice = Infinity;
+  for (const tr of bundle.tiers) {
+    const n = parseFloat(tr?.price);
+    if (!isNaN(n) && n > 0 && n < bestPrice) {
+      bestPrice = n;
+      bestTier = tr;
+    }
+  }
+  return bestTier?.gamesCount || null;
+}
+
+function analyzeBundleComparison(bundles, bestPrice, currency) {
+  if (bestPrice == null || isNaN(bestPrice) || !Array.isArray(bundles) || bundles.length === 0) {
+    return { kind: 'none' };
+  }
+  let bestBundle = null;
+  let bestTier = null;
+  let bestTierPrice = Infinity;
+  for (const b of bundles) {
+    for (const tr of (b.tiers || [])) {
+      const tierPrice = parseFloat(tr?.price);
+      if (!isNaN(tierPrice) && tierPrice > 0 && tierPrice < bestTierPrice) {
+        bestTierPrice = tierPrice;
+        bestBundle = b;
+        bestTier = tr;
+      }
+    }
+  }
+  if (!bestBundle || !isFinite(bestTierPrice)) return { kind: 'none' };
+
+  const delta = Math.round((bestPrice - bestTierPrice) * 100) / 100;
+  const canonical = getCanonicalBundleStore(bestBundle);
+  const { bundleTitle } = getBundleShopAndTitle(bestBundle);
+  const cur = bestTier?.currency || currency || 'USD';
+  const base = {
+    shopName: canonical.label,
+    bundleTitle,
+    bundleUrl: bestBundle.url || '',
+    tierPrice: bestTierPrice,
+    gamesCount: bestTier?.gamesCount || getBundleTierGameCount(bestBundle),
+    delta: Math.abs(delta),
+    currency: cur,
+  };
+  return delta >= 0 ? { ...base, kind: 'worth' } : { ...base, kind: 'higher' };
+}
+
 async function getBundleComparisonForGame(id, bestPrice, currency) {
   if (bestPrice == null || isNaN(bestPrice)) return { kind: 'none' };
   return new Promise((resolve) => {
     chrome.runtime.sendMessage({ action: 'getBundles', ids: [id], region: regionSelect.value }, (resp) => {
       const bundles = resp?.success ? (resp.data?.[id]?.bundles || []) : [];
-      if (!bundles.length) {
-        resolve({ kind: 'none' });
-        return;
-      }
-      let bestBundle = null;
-      let bestTierPrice = Infinity;
-      for (const b of bundles) {
-        for (const tr of (b.tiers || [])) {
-          const tierPrice = parseFloat(tr?.price);
-          if (!isNaN(tierPrice) && tierPrice > 0 && tierPrice < bestTierPrice) {
-            bestTierPrice = tierPrice;
-            bestBundle = b;
-          }
-        }
-      }
-      if (!bestBundle || !isFinite(bestTierPrice)) {
-        resolve({ kind: 'none' });
-        return;
-      }
-      const delta = Math.round((bestPrice - bestTierPrice) * 100) / 100;
-      const { shopName } = getBundleShopAndTitle(bestBundle);
-      const cur = bestBundle?.tiers?.[0]?.currency || currency || 'USD';
-      if (delta >= 0) {
-        resolve({
-          kind: 'worth',
-          shopName,
-          tierPrice: bestTierPrice,
-          delta,
-          currency: cur,
-        });
-      } else {
-        resolve({
-          kind: 'higher',
-          shopName,
-          tierPrice: bestTierPrice,
-          delta: Math.abs(delta),
-          currency: cur,
-        });
-      }
+      resolve(analyzeBundleComparison(bundles, bestPrice, currency));
     });
   });
+}
+
+function getBuyRecommendation(prices, bundleComparison = null) {
+  const best = getBestPrice(prices);
+  const hist = getBestHistoricalLow(prices);
+  const currency = prices?.currency || 'USD';
+  if (bundleComparison?.kind === 'worth') {
+    return {
+      kind: 'bundle_pick',
+      label: t('recBundlePick'),
+      className: 'rec-bundle',
+      summary: t('recBundleSummary', String(bundleComparison.delta), bundleComparison.currency || currency),
+    };
+  }
+  if (best !== null && hist !== null && best <= hist * 1.01) {
+    return {
+      kind: 'buy_now',
+      label: t('recBuyNow'),
+      className: 'rec-buy',
+      summary: t('recBuyNowSummary'),
+    };
+  }
+  if (best !== null && hist !== null && best > hist * 1.15) {
+    const above = Math.round((best - hist) * 100) / 100;
+    return {
+      kind: 'wait',
+      label: t('recWait'),
+      className: 'rec-wait',
+      summary: t('recWaitSummary', String(above), currency),
+    };
+  }
+  return {
+    kind: 'watch',
+    label: t('recWatch'),
+    className: 'rec-watch',
+    summary: t('recWatchSummary'),
+  };
+}
+
+function renderRecommendationBadge(recommendation) {
+  if (!recommendation) return '';
+  return `<span class="recommendation-badge ${recommendation.className}" title="${escapeAttr(recommendation.summary || recommendation.label)}">${escapeHtml(recommendation.label)}</span>`;
 }
 
 function renderActiveBundles() {
@@ -1645,6 +1743,7 @@ function displayWishlist() {
   for (const item of wishlist) {
     const dateStr = new Date(item.addedDate).toLocaleDateString();
     const lastKnown = item.lastPrice != null ? `${item.lastPrice} ${item.lastCurrency || 'USD'}` : null;
+    const recommendationBadge = renderRecommendationBadge(item.recommendationCache);
 
     const imageInfo = getResolvedImageForGame(item.id);
 
@@ -1653,7 +1752,7 @@ function displayWishlist() {
         <img class="wishlist-img" src="${escapeHtml(imageInfo.src)}" data-fallbacks="${escapeAttr(imageInfo.fallbacks)}" alt="${escapeHtml(item.title)}">
         <div class="wishlist-header-info">
           <div class="wishlist-title">${escapeHtml(item.title)}</div>
-          <div class="wishlist-meta"><span>${escapeHtml(t('addedOn', dateStr))}</span>${item.addedPrice != null ? `<span>${escapeHtml(t('atPrice', String(item.addedPrice)))}</span>` : ''}</div>
+          <div class="wishlist-meta"><span>${escapeHtml(t('addedOn', dateStr))}</span>${item.addedPrice != null ? `<span>${escapeHtml(t('atPrice', String(item.addedPrice)))}</span>` : ''}${recommendationBadge}</div>
         </div>
         <div class="wishlist-price-badge ${lastKnown ? '' : 'unknown'}" id="wlPrice_${item.id}">${lastKnown || escapeHtml(t('clickToCheck'))}</div>
         <div class="wishlist-expand-icon">▼</div>
@@ -1829,9 +1928,11 @@ function loadWishlistItemDetail(id) {
     const score = calculateDealScore(p, false);
     const threshold = wl?.alertThreshold ?? histLow ?? best ?? '';
     const bundleCalloutId = `wlBundleCallout_${id}`;
+    const recommendationBadgeId = `wlRecommendation_${id}`;
+    const initialRecommendation = wl?.recommendationCache || getBuyRecommendation(p, wl?.bundleComparisonCache || null);
 
     detailEl.innerHTML = `<div style="padding-top:10px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">${changeHtml}${dealScoreBadge(score)}</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">${changeHtml}${dealScoreBadge(score)}<span id="${recommendationBadgeId}">${renderRecommendationBadge(initialRecommendation)}</span></div>
       <div class="price-section">${pc(t('officialStores'), p.currentRetail, retailDisc, !bestIsKey && retailDisc)}${pc(t('keyshops'), p.currentKeyshops, keyDisc, bestIsKey)}</div>
       ${histHtml}
       <div id="${bundleCalloutId}"></div>
@@ -1893,8 +1994,16 @@ function loadWishlistItemDetail(id) {
     if (calloutEl) {
       calloutEl.innerHTML = `<div class="bundle-worth-callout loading">Checking active bundles for this game…</div>`;
       const cmp = await getBundleComparisonForGame(id, best, currency);
+      const detailRecommendation = getBuyRecommendation(p, cmp);
+      const recEl = document.getElementById(recommendationBadgeId);
+      if (recEl) recEl.innerHTML = renderRecommendationBadge(detailRecommendation);
+      if (wl) {
+        wl.bundleComparisonCache = cmp;
+        wl.recommendationCache = detailRecommendation;
+        saveData();
+      }
       if (cmp.kind === 'worth') {
-        calloutEl.innerHTML = `<div class="bundle-worth-callout worth">📦 Bundle watch: ${escapeHtml(cmp.shopName)} has a tier at <b>${cmp.tierPrice} ${cmp.currency}</b>, which is <b>${cmp.delta} ${cmp.currency}</b> below this game's current best price.</div>`;
+        calloutEl.innerHTML = `<div class="bundle-worth-callout worth">📦 Bundle watch: ${escapeHtml(cmp.shopName)} has ${cmp.bundleTitle ? `<b>${escapeHtml(cmp.bundleTitle)}</b> with ` : ''}a tier at <b>${cmp.tierPrice} ${cmp.currency}</b>, which is <b>${cmp.delta} ${cmp.currency}</b> below this game's current best price.</div>`;
       } else if (cmp.kind === 'higher') {
         calloutEl.innerHTML = `<div class="bundle-worth-callout higher">📦 Bundle watch: cheapest matching tier is <b>${cmp.tierPrice} ${cmp.currency}</b> at ${escapeHtml(cmp.shopName)}, about <b>${cmp.delta} ${cmp.currency}</b> above this game's current best price.</div>`;
       } else {

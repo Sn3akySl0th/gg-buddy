@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.7.0] - 2026-04-28
+
+### Added
+
+- **Bundle Watchlist** — The dashboard now highlights wishlisted games where an active bundle tier is cheaper than the current standalone best price.
+- **Smarter Buy Recommendations** — Game cards and wishlist rows now show recommendation badges such as Bundle pick, Buy now, Wait, and Watch based on bundle value, historical lows, and current prices.
+
+---
+
 ## [2.6.2] - 2026-04-23
 
 ### Changed
@@ -90,6 +99,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Themes (Light/Dark/OLED/System), accent colors, compact mode.
 - Cross-device sync via Chrome storage.
 
+[2.7.0]: https://github.com/ggbuddy/GameDealFinder/compare/v2.6.2...v2.7.0
 [2.6.2]: https://github.com/ggbuddy/GameDealFinder/compare/v2.6.1...v2.6.2
 [2.6.1]: https://github.com/ggbuddy/GameDealFinder/compare/v2.6.0...v2.6.1
 [2.6.0]: https://github.com/ggbuddy/GameDealFinder/compare/v2.5.0...v2.6.0
